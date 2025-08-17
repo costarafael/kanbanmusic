@@ -32,26 +32,17 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         throw new Error('File size must be less than 100MB');
       }
       
-      const formData = new FormData();
-      formData.append('audio', file);
+      // Use Vercel Blob client upload for large files
+      const { upload } = await import('@vercel/blob/client');
       
-      console.log('Sending request to /api/upload/audio');
-      const response = await fetch('/api/upload/audio', {
-        method: 'POST',
-        body: formData,
+      console.log('Uploading via Vercel Blob...');
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload/audio-presigned',
       });
       
-      console.log('Upload response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload failed:', response.status, errorText);
-        throw new Error(`Failed to upload audio file: ${response.status} ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('Upload successful:', data);
-      const uploadedUrl = data.url;
+      console.log('Blob upload successful:', blob);
+      const uploadedUrl = blob.url;
       
       onAudioUrlChange(uploadedUrl);
       
@@ -100,21 +91,16 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
   
   const uploadExtractedCover = async (blob: Blob) => {
     try {
-      const formData = new FormData();
-      formData.append('cover', blob, 'cover.jpg');
+      // Use Vercel Blob client upload for cover
+      const { upload } = await import('@vercel/blob/client');
       
-      const response = await fetch('/api/upload/cover', {
-        method: 'POST',
-        body: formData,
+      const uploadedBlob = await upload('extracted-cover.jpg', blob, {
+        access: 'public',
+        handleUploadUrl: '/api/upload/cover-presigned',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to upload extracted cover');
-      }
-
-      const data = await response.json();
       if (onCoverUrlChange) {
-        onCoverUrlChange(data.url);
+        onCoverUrlChange(uploadedBlob.url);
       }
       console.log('Successfully uploaded extracted cover art');
     } catch (error) {

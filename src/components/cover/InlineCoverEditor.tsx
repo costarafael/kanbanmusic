@@ -17,20 +17,17 @@ export function InlineCoverEditor({ currentUrl, onCoverUrlChange, onClose }: Inl
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('cover', file);
+      // Use Vercel Blob client upload for large files
+      const { upload } = await import('@vercel/blob/client');
       
-      const response = await fetch('/api/upload/cover', {
-        method: 'POST',
-        body: formData,
+      console.log('Uploading cover via Vercel Blob...');
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload/cover-presigned',
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload cover image');
-      }
-
-      const data = await response.json();
-      onCoverUrlChange(data.url);
+      
+      console.log('Cover upload successful:', blob);
+      onCoverUrlChange(blob.url);
       
       // Auto close after successful upload
       setTimeout(() => {
