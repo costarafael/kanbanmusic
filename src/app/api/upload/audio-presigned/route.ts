@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
  
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
-
   try {
+    console.log('🔐 Audio presigned URL endpoint called');
+    
+    const body = (await request.json()) as HandleUploadBody;
+    console.log('📦 Request body received:', JSON.stringify(body, null, 2));
+    
     console.log('🔐 Generating presigned URL for audio upload...');
     
     const jsonResponse = await handleUpload({

@@ -63,19 +63,27 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       } else {
         // Use client upload for larger files (no AI analysis for now)
         console.log('Using client upload for file over 4.5MB...');
+        console.log('File details:', { name: file.name, size: file.size, type: file.type });
         
-        const { upload } = await import('@vercel/blob/client');
-        
-        const blob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/upload/audio-presigned',
-        });
-        
-        uploadedUrl = blob.url;
-        console.log('Client upload successful:', blob.url);
-        
-        // TODO: For large files, we could implement a separate AI analysis step
-        // by calling the analysis API with the uploaded URL
+        try {
+          const { upload } = await import('@vercel/blob/client');
+          console.log('Imported @vercel/blob/client successfully');
+          
+          console.log('Starting client upload with presigned URL...');
+          const blob = await upload(file.name, file, {
+            access: 'public',
+            handleUploadUrl: '/api/upload/audio-presigned',
+          });
+          
+          uploadedUrl = blob.url;
+          console.log('Client upload successful:', blob.url);
+          
+          // TODO: For large files, we could implement a separate AI analysis step
+          // by calling the analysis API with the uploaded URL
+        } catch (clientUploadError) {
+          console.error('Client upload failed:', clientUploadError);
+          throw new Error(`Client upload failed: ${clientUploadError instanceof Error ? clientUploadError.message : 'Unknown client upload error'}`);
+        }
       }
       
       onAudioUrlChange(uploadedUrl, musicAiNotes);
