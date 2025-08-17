@@ -94,6 +94,18 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       }
     } catch (error) {
       console.error('Error uploading audio:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        cause: error instanceof Error ? error.cause : undefined
+      });
+      
+      // Check if it's a network error, permission error, etc.
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.error('Network error detected - check if API endpoint is accessible');
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       alert(`Failed to upload audio file: ${errorMessage}`);
     } finally {

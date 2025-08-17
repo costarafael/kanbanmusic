@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -178,8 +178,11 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="max-w-[720px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[720px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="card-detail-description">
         <DialogHeader className="flex-shrink-0">
+          <DialogDescription id="card-detail-description" className="sr-only">
+            Edit card details including title, audio, cover, rating, tags, and description
+          </DialogDescription>
           <DialogTitle asChild>
             <div className="flex items-center justify-between">
               <div className="flex-1 mr-4">
