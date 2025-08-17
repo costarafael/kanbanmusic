@@ -32,81 +32,33 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         throw new Error('File size must be less than 100MB');
       }
       
-      const FILE_SIZE_LIMIT_VERCEL = 4.5 * 1024 * 1024; // 4.5MB limit for Vercel Functions
+      // TEMPORARY: Use server upload for all files due to Vercel auth protection
+      // TODO: Fix Vercel project authentication settings to allow public presigned URLs
+      console.log('Using server upload (auth protection prevents client upload)...');
       
       let uploadedUrl: string;
       let musicAiNotes: string | undefined;
       
-      if (file.size <= FILE_SIZE_LIMIT_VERCEL) {
-        // Use server upload for smaller files (includes AI analysis)
-        console.log('Using server upload for file under 4.5MB...');
-        
-        const formData = new FormData();
-        formData.append('audio', file);
-        
-        const response = await fetch('/api/upload/audio', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error('Server upload failed:', response.status, response.statusText, errorData);
-          throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        uploadedUrl = result.url;
-        musicAiNotes = result.music_ai_notes;
-        
-        console.log('Server upload successful:', result);
-      } else {
-        // Use client upload for larger files (bypasses server completely)
-        console.log('Using client upload for file over 4.5MB...');
-        console.log('File details:', { name: file.name, size: file.size, type: file.type });
-        
-        try {
-          const { upload } = await import('@vercel/blob/client');
-          console.log('Imported @vercel/blob/client successfully');
-          
-          console.log('Starting direct client upload to Vercel Blob...');
-          
-          // Direct client upload - bypasses server processing completely
-          const blob = await upload(file.name, file, {
-            access: 'public',
-            handleUploadUrl: '/api/upload/audio-presigned',
-          });
-          
-          uploadedUrl = blob.url;
-          console.log('Direct client upload successful:', blob.url);
-          
-          // For large files, skip AI analysis for now to avoid server issues
-          // User can manually request analysis later if needed
-          console.log('Skipping AI analysis for large file to avoid server timeout');
-          
-        } catch (clientUploadError) {
-          console.error('Client upload failed:', clientUploadError);
-          console.error('Client upload error details:', {
-            name: clientUploadError instanceof Error ? clientUploadError.name : 'Unknown',
-            message: clientUploadError instanceof Error ? clientUploadError.message : 'Unknown error',
-            stack: clientUploadError instanceof Error ? clientUploadError.stack : undefined
-          });
-          
-          // More specific error message based on error type
-          let errorMessage = 'Unknown client upload error';
-          if (clientUploadError instanceof Error) {
-            if (clientUploadError.message.includes('fetch')) {
-              errorMessage = 'Network error during upload. Check your internet connection.';
-            } else if (clientUploadError.message.includes('token') || clientUploadError.message.includes('unauthorized')) {
-              errorMessage = 'Upload authorization failed. Please try again.';
-            } else {
-              errorMessage = clientUploadError.message;
-            }
-          }
-          
-          throw new Error(`Client upload failed: ${errorMessage}`);
-        }
+      const formData = new FormData();
+      formData.append('audio', file);
+      
+      console.log('Starting server upload...');
+      const response = await fetch('/api/upload/audio', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Server upload failed:', response.status, response.statusText, errorData);
+        throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
       }
+      
+      const result = await response.json();
+      uploadedUrl = result.url;
+      musicAiNotes = result.music_ai_notes;
+      
+      console.log('Server upload successful:', result);
       
       onAudioUrlChange(uploadedUrl, musicAiNotes);
       

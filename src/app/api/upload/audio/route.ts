@@ -78,12 +78,12 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Validation passed, starting upload to Vercel Blob...');
     
-    // Use Vercel Blob client upload for large files
-    const { upload } = await import('@vercel/blob/client');
+    // Use server-side put for direct blob upload (avoids filesystem operations)
+    const { put } = await import('@vercel/blob');
     
-    const blob = await upload(file.name, file, {
+    const blob = await put(file.name, file, {
       access: 'public',
-      handleUploadUrl: '/api/upload/audio-presigned',
+      addRandomSuffix: true,
     });
     
     console.log('✅ Blob upload successful:', blob.url);
