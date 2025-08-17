@@ -61,7 +61,7 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         
         console.log('Server upload successful:', result);
       } else {
-        // Use client upload for larger files (no AI analysis for now)
+        // Use client upload for larger files (bypasses server completely)
         console.log('Using client upload for file over 4.5MB...');
         console.log('File details:', { name: file.name, size: file.size, type: file.type });
         
@@ -69,20 +69,42 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
           const { upload } = await import('@vercel/blob/client');
           console.log('Imported @vercel/blob/client successfully');
           
-          console.log('Starting client upload with presigned URL...');
+          console.log('Starting direct client upload to Vercel Blob...');
+          
+          // Direct client upload - bypasses server processing completely
           const blob = await upload(file.name, file, {
             access: 'public',
             handleUploadUrl: '/api/upload/audio-presigned',
           });
           
           uploadedUrl = blob.url;
-          console.log('Client upload successful:', blob.url);
+          console.log('Direct client upload successful:', blob.url);
           
-          // TODO: For large files, we could implement a separate AI analysis step
-          // by calling the analysis API with the uploaded URL
+          // For large files, skip AI analysis for now to avoid server issues
+          // User can manually request analysis later if needed
+          console.log('Skipping AI analysis for large file to avoid server timeout');
+          
         } catch (clientUploadError) {
           console.error('Client upload failed:', clientUploadError);
-          throw new Error(`Client upload failed: ${clientUploadError instanceof Error ? clientUploadError.message : 'Unknown client upload error'}`);
+          console.error('Client upload error details:', {
+            name: clientUploadError instanceof Error ? clientUploadError.name : 'Unknown',
+            message: clientUploadError instanceof Error ? clientUploadError.message : 'Unknown error',
+            stack: clientUploadError instanceof Error ? clientUploadError.stack : undefined
+          });
+          
+          // More specific error message based on error type
+          let errorMessage = 'Unknown client upload error';
+          if (clientUploadError instanceof Error) {
+            if (clientUploadError.message.includes('fetch')) {
+              errorMessage = 'Network error during upload. Check your internet connection.';
+            } else if (clientUploadError.message.includes('token') || clientUploadError.message.includes('unauthorized')) {
+              errorMessage = 'Upload authorization failed. Please try again.';
+            } else {
+              errorMessage = clientUploadError.message;
+            }
+          }
+          
+          throw new Error(`Client upload failed: ${errorMessage}`);
         }
       }
       

@@ -14,7 +14,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        console.log('📁 Validating file:', pathname);
+        console.log('📁 Validating file for presigned URL:', pathname);
+        console.log('🔍 Client payload:', clientPayload);
         
         // Validate file type from the pathname
         const allowedExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
@@ -23,11 +24,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
         
         if (!hasValidExtension) {
-          console.error('❌ Invalid file extension:', pathname);
-          throw new Error('Invalid file type. Only audio files are allowed.');
+          console.error('❌ Invalid file extension for audio:', pathname);
+          throw new Error(`Invalid file type. Only audio files are allowed. File: ${pathname}`);
         }
 
-        console.log('✅ File validation passed for:', pathname);
+        console.log('✅ Audio file validation passed for:', pathname);
+
+        // Check if we have the required environment variable
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          console.error('❌ Missing BLOB_READ_WRITE_TOKEN environment variable');
+          throw new Error('Server configuration error: Missing blob storage token');
+        }
+
+        console.log('✅ Environment configuration validated');
 
         return {
           allowedContentTypes: [
@@ -42,6 +51,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           tokenPayload: JSON.stringify({
             uploadedAt: new Date().toISOString(),
             originalFilename: pathname,
+            uploadType: 'client-upload-large-file',
           }),
         };
       },
