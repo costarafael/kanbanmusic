@@ -188,7 +188,17 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
                 autoFocus
               />
             ) : (
-              <CardTitle className="cursor-pointer truncate" onClick={() => setIsEditingTitle(true)}>
+              <CardTitle 
+                className="cursor-pointer line-clamp-2 leading-tight" 
+                onClick={() => setIsEditingTitle(true)}
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  wordBreak: 'break-word'
+                }}
+              >
                 {column.title}
               </CardTitle>
             )}
@@ -200,9 +210,9 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
                 <Button 
                   variant="ghost"
                   size="sm" 
-                  className="hover:scale-105 transition-transform duration-200"
+                  className="hover:scale-105 transition-transform duration-200 h-8 w-8 p-0"
                 >
-                  + Add Card
+                  +
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
@@ -273,7 +283,22 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
           strategy={verticalListSortingStrategy}
         >
           {cards.length > 0 ? (
-            cards.map((card) => <Card key={card.id} card={card} onCardClick={onCardClick} />)
+            <>
+              {cards.map((card) => <Card key={card.id} card={card} onCardClick={onCardClick} />)}
+              
+              {/* Add Card Button at the end */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full mt-2 border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors duration-200 h-10 text-gray-500 hover:text-gray-700"
+                onClick={() => setIsAddCardDialogOpen(true)}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Card
+              </Button>
+            </>
           ) : (
             <div 
               className="flex flex-col items-center justify-center h-32 text-center p-4 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors duration-200"

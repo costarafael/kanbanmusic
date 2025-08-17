@@ -475,6 +475,46 @@ export function Board({ boardId }: BoardProps) {
                   onCardClick={handleOpenCard}
                 />
               ))}
+              
+              {/* Add Column Button */}
+              <div className="w-80 flex-shrink-0">
+                <Dialog open={isCreateColumnDialogOpen} onOpenChange={setIsCreateColumnDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full h-32 border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors duration-200 flex flex-col items-center justify-center gap-2 bg-white/50 hover:bg-white/80"
+                    >
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-gray-500 font-medium">Add Column</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create a new column</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4">
+                      <Input 
+                        placeholder="Column title" 
+                        value={newColumnTitle} 
+                        onChange={(e) => setNewColumnTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newColumnTitle.trim()) {
+                            createColumnMutation({ title: newColumnTitle, boardId });
+                          }
+                        }}
+                      />
+                      <Button 
+                        onClick={() => createColumnMutation({ title: newColumnTitle, boardId })}
+                        disabled={!newColumnTitle.trim()}
+                      >
+                        Create
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </SortableContext>
         ) : (
