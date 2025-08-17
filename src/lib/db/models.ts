@@ -7,6 +7,7 @@ const cardSchema = new Schema({
   description: { type: Object }, // Objeto JSON do Yoopta
   audioUrl: { type: String },
   coverUrl: { type: String }, // URL da imagem de cover
+  music_ai_notes: { type: String }, // Notas de análise musical geradas por AI
   rating: { type: Number, min: 0, max: 5, default: 0 }, // Rating de 0-5 estrelas
   tags: [{ type: String, trim: true }], // Array de tags
   showDescriptionInPreview: { type: Boolean, default: false }, // Mostrar descrição no preview

@@ -32,8 +32,11 @@ export const updateCardSchema = z.object({
   description: z.any().optional(), // Rich text content object
   audioUrl: z.string().refine(isValidAudioUrl, 'Invalid audio URL or path').optional().or(z.literal('')),
   coverUrl: z.string().refine(isValidUrl, 'Invalid cover URL or path').optional().or(z.literal('')),
+  music_ai_notes: z.string().optional(), // AI-generated music analysis notes
   rating: z.number().int().min(0).max(5).optional(),
+  tags: z.array(z.string().trim().min(1)).optional(),
   showDescriptionInPreview: z.boolean().optional(),
+  showTagsInPreview: z.boolean().optional(),
   order: z.number().int().min(0).optional(),
   columnId: z.string().optional(),
   status: z.enum(['active', 'archived']).optional(),

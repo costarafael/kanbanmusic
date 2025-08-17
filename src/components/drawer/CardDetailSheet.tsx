@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { Archive, MoreHorizontal } from "lucide-react";
 import { TagsInput } from "@/components/ui/tags-input";
@@ -47,6 +48,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
   const [tags, setTags] = useState<string[]>(card?.tags || []);
   const [showDescriptionInPreview, setShowDescriptionInPreview] = useState(card?.showDescriptionInPreview || false);
   const [showTagsInPreview, setShowTagsInPreview] = useState(card?.showTagsInPreview !== false); // Default true
+  const [musicAiNotes, setMusicAiNotes] = useState(card?.music_ai_notes || "");
   const queryClient = useQueryClient();
 
   // Fetch board tags for autocomplete
@@ -83,6 +85,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
       setTags(card.tags || []);
       setShowDescriptionInPreview(card.showDescriptionInPreview || false);
       setShowTagsInPreview(card.showTagsInPreview !== false);
+      setMusicAiNotes(card.music_ai_notes || "");
     }
   }, [card]);
 
@@ -103,9 +106,17 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
     updateCardMutation({ id: card.id, description });
   };
 
-  const handleAudioUrlChange = (url: string) => {
+  const handleAudioUrlChange = (url: string, aiNotes?: string) => {
     setAudioUrl(url);
-    updateCardMutation({ id: card.id, audioUrl: url });
+    const updateData: any = { id: card.id, audioUrl: url };
+    
+    // If AI notes are provided from upload, update them too
+    if (aiNotes && aiNotes !== musicAiNotes) {
+      setMusicAiNotes(aiNotes);
+      updateData.music_ai_notes = aiNotes;
+    }
+    
+    updateCardMutation(updateData);
   };
 
   const handleCoverUrlChange = (url: string) => {
@@ -147,6 +158,12 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
   const handleShowTagsToggle = (checked: boolean) => {
     setShowTagsInPreview(checked);
     updateCardMutation({ id: card.id, showTagsInPreview: checked });
+  };
+
+  const handleMusicAiNotesChange = () => {
+    if (musicAiNotes !== (card.music_ai_notes || "")) {
+      updateCardMutation({ id: card.id, music_ai_notes: musicAiNotes });
+    }
   };
 
   const handleArchiveCard = () => {
@@ -255,6 +272,24 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
                   placeholder="Add tags like 'rock indie', 'summer songs'..."
                 />
               </div>
+
+              {/* Music AI Notes Section */}
+              {musicAiNotes && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-slate-700">Music AI Notes</span>
+                    <span className="text-xs text-slate-400">AI-generated analysis</span>
+                  </div>
+                  <Textarea
+                    value={musicAiNotes}
+                    onChange={(e) => setMusicAiNotes(e.target.value)}
+                    onBlur={handleMusicAiNotesChange}
+                    placeholder="AI-generated music analysis will appear here..."
+                    className="min-h-[120px] text-sm"
+                    readOnly={false}
+                  />
+                </div>
+              )}
 
               {/* Description Section */}
               <div>

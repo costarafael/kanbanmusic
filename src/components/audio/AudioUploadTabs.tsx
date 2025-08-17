@@ -10,7 +10,7 @@ import { parseBuffer } from "music-metadata-browser";
 
 interface AudioUploadTabsProps {
   currentUrl?: string;
-  onAudioUrlChange: (url: string) => void;
+  onAudioUrlChange: (url: string, aiNotes?: string) => void;
   currentCoverUrl?: string;
   onCoverUrlChange?: (url: string) => void;
 }
@@ -32,19 +32,24 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         throw new Error('File size must be less than 100MB');
       }
       
-      // Use Vercel Blob client upload for large files
-      const { upload } = await import('@vercel/blob/client');
+      // Use new audio upload API that includes AI analysis
+      const formData = new FormData();
+      formData.append('audio', file);
       
-      console.log('Uploading via Vercel Blob...');
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/upload/audio-presigned',
+      console.log('Uploading file with AI analysis...');
+      const response = await fetch('/api/upload/audio', {
+        method: 'POST',
+        body: formData
       });
       
-      console.log('Blob upload successful:', blob);
-      const uploadedUrl = blob.url;
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
       
-      onAudioUrlChange(uploadedUrl);
+      const result = await response.json();
+      console.log('Upload successful:', result);
+      
+      onAudioUrlChange(result.url, result.music_ai_notes);
       
       // Check if MP3 has embedded cover art
       if (file.type === 'audio/mpeg' || file.type === 'audio/mp3') {
