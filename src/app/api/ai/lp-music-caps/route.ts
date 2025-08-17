@@ -188,7 +188,7 @@ async function callLPMusicCapsWithFile(filePath: string): Promise<MusicCapsResul
 }
 
 export async function POST(request: NextRequest) {
-  let tempFiles: string[] = [];
+  const tempFiles: string[] = [];
   
   try {
     const formData = await request.formData();
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
     for (const tempFile of tempFiles) {
       try {
         await unlink(tempFile);
-      } catch (error) {
+      } catch {
         console.warn(`Failed to cleanup temp file: ${tempFile}`);
       }
     }
@@ -281,7 +281,7 @@ export async function POST(request: NextRequest) {
     for (const tempFile of tempFiles) {
       try {
         await unlink(tempFile);
-      } catch (cleanupError) {
+      } catch {
         console.warn(`Failed to cleanup temp file on error: ${tempFile}`);
       }
     }
@@ -297,7 +297,7 @@ export async function POST(request: NextRequest) {
 /**
  * Generate insights from the music caption
  */
-function generateMusicInsights(caption: string, metadata: any) {
+function generateMusicInsights(caption: string, _metadata: any) {
   if (!caption || caption.includes('No caption') || caption.includes('Unable to generate')) {
     return {
       genre: 'unknown',

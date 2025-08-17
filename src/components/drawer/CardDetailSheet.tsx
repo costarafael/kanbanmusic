@@ -59,7 +59,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
       // We need to get the board ID from the card, but we don't have it directly
       // For now, we'll extract it from the context or make an additional API call
       // Let's assume we can get it from the current URL or pass it as prop
-      const response = await fetch(`/api/boards/${getBoardIdFromCard(card)}/tags`);
+      const response = await fetch(`/api/boards/${getBoardIdFromCard()}/tags`);
       if (!response.ok) return { tags: [] };
       return response.json();
     },
@@ -67,7 +67,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
   });
 
   // Helper function to get board ID - this might need adjustment based on your routing
-  function getBoardIdFromCard(_card: any) {
+  function getBoardIdFromCard() {
     // This is a temporary solution - you might need to pass boardId as prop
     // or extract it from the current URL
     const url = window.location.pathname;
@@ -135,7 +135,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
     
     // Update board's known tags
     try {
-      const boardId = getBoardIdFromCard(card);
+      const boardId = getBoardIdFromCard();
       if (boardId) {
         await fetch(`/api/boards/${boardId}/tags`, {
           method: 'POST',

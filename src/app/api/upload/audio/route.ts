@@ -23,7 +23,7 @@ async function callLPMusicCapsAPI(filePath: string): Promise<string | null> {
     
     const formData = new FormData();
     const fileBuffer = await readFile(filePath);
-    const blob = new Blob([fileBuffer], { type: 'audio/wav' });
+    const blob = new Blob([new Uint8Array(fileBuffer)], { type: 'audio/wav' });
     formData.append('audio', blob, 'audio.wav');
 
     const response = await fetch('http://localhost:3001/api/ai/lp-music-caps', {
