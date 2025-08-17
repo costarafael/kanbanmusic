@@ -1,32 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir, readFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
-interface UploadOptions {
-  allowedTypes: string[];
-  maxSize: number;
-  directory: string;
-  fieldName: string;
-}
-
-const AUDIO_CONFIG: UploadOptions = {
-  allowedTypes: ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/aac', 'audio/mpeg'],
-  maxSize: 100 * 1024 * 1024, // 100MB
-  directory: 'audio',
-  fieldName: 'audio'
-};
-
-async function callLPMusicCapsAPI(filePath: string): Promise<string | null> {
+async function callLPMusicCapsAPI(audioFile: File): Promise<string | null> {
   try {
     console.log('🎵 Calling LP-MusicCaps for audio analysis...');
     
     const formData = new FormData();
-    const fileBuffer = await readFile(filePath);
-    const blob = new Blob([new Uint8Array(fileBuffer)], { type: 'audio/wav' });
-    formData.append('audio', blob, 'audio.wav');
+    formData.append('audio', audioFile);
 
-    const response = await fetch('http://localhost:3001/api/ai/lp-music-caps', {
+    // Get the base URL for the current request
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3001' 
+        : 'https://kanbanmusic-fqmlybkuk-costarafaels-projects.vercel.app';
+    
+    const response = await fetch(`${baseUrl}/api/ai/lp-music-caps`, {
       method: 'POST',
       body: formData,
     });
@@ -64,56 +52,50 @@ async function callLPMusicCapsAPI(filePath: string): Promise<string | null> {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get(AUDIO_CONFIG.fieldName) as File;
+    const file = formData.get('audio') as File;
 
     if (!file) {
-      return NextResponse.json({ error: `No ${AUDIO_CONFIG.fieldName} file provided` }, { status: 400 });
+      return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
     }
 
     // Validate file type
-    if (!AUDIO_CONFIG.allowedTypes.includes(file.type)) {
+    const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/aac', 'audio/mpeg'];
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 
-    // Validate file size
-    if (file.size > AUDIO_CONFIG.maxSize) {
+    // Validate file size (100MB)
+    if (file.size > 100 * 1024 * 1024) {
       return NextResponse.json({ error: 'File size too large' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Create directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', AUDIO_CONFIG.directory);
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const fileExtension = file.name.split('.').pop() || 'bin';
-    const filename = `${timestamp}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
-    const filepath = join(uploadsDir, filename);
-
-    // Write file
-    await writeFile(filepath, buffer);
-
-    const url = `/uploads/${AUDIO_CONFIG.directory}/${filename}`;
+    console.log('🔄 Uploading audio file to Vercel Blob...');
+    
+    // Use Vercel Blob client upload for large files
+    const { upload } = await import('@vercel/blob/client');
+    
+    const blob = await upload(file.name, file, {
+      access: 'public',
+      handleUploadUrl: '/api/upload/audio-presigned',
+    });
+    
+    console.log('✅ Blob upload successful:', blob.url);
+    const uploadedUrl = blob.url;
     
     // Call LP-MusicCaps API for music analysis
     console.log('🔄 Processing music analysis for uploaded file...');
-    const musicAnalysis = await callLPMusicCapsAPI(filepath);
+    const musicAnalysis = await callLPMusicCapsAPI(file);
 
     const response = {
-      url,
+      url: uploadedUrl,
       music_ai_notes: musicAnalysis || undefined
     };
 
-    console.log('📁 Audio upload completed:', { url, hasAnalysis: !!musicAnalysis });
+    console.log('📁 Audio upload completed:', { url: uploadedUrl, hasAnalysis: !!musicAnalysis });
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error(`${AUDIO_CONFIG.fieldName} upload error:`, error);
-    return NextResponse.json({ error: `Failed to upload ${AUDIO_CONFIG.fieldName}` }, { status: 500 });
+    console.error('Audio upload error:', error);
+    return NextResponse.json({ error: 'Failed to upload audio file' }, { status: 500 });
   }
 }
