@@ -43,7 +43,9 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       });
       
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Upload failed:', response.status, response.statusText, errorData);
+        throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
       }
       
       const result = await response.json();
@@ -348,10 +350,10 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       )}
       
       <Dialog open={showCoverDialog} onOpenChange={setShowCoverDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="cover-art-description">
           <DialogHeader>
             <DialogTitle>Cover Art Found</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="cover-art-description">
               This MP3 file contains embedded cover art. Would you like to use it as the card&apos;s cover image?
             </DialogDescription>
           </DialogHeader>
