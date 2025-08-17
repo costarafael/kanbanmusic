@@ -119,6 +119,7 @@ Criado `next.config.js` com configurações para:
 npm run dev          # Iniciar servidor de desenvolvimento
 npm run build        # Build de produção
 npm run rebuild      # Limpeza e reinstalação completa
+npm run backup       # Criar backup do projeto
 ```
 
 ### Limpeza Manual
@@ -130,6 +131,31 @@ rm -rf .next
 rm -rf .next node_modules package-lock.json
 npm cache clean --force
 ```
+
+### Script de Backup
+```bash
+# Criar backup do projeto
+npm run backup
+# ou diretamente
+./backup.sh
+```
+
+**O que inclui no backup:**
+- ✅ Código fonte (src/)
+- ✅ Arquivos de configuração (.env, package.json, etc.)
+- ✅ Documentação
+- ✅ Repositório Git (.git/)
+
+**O que exclui do backup:**
+- ❌ node_modules/
+- ❌ .next/, dist/, build/, out/
+- ❌ Diretórios de cache (.cache, .vercel, .turbo)
+- ❌ Arquivos de log
+- ❌ Arquivos temporários
+- ❌ Arquivos específicos do OS/Editor (.DS_Store, .vscode, etc.)
+
+**Localização:** O backup é salvo um nível acima do projeto com timestamp:
+`../kanban-app_backup_YYYYMMDD_HHMMSS.zip`
 
 ## 📁 Estrutura de Arquivos Importante
 

@@ -8,6 +8,7 @@
     "start": "next start",
     "rebuild": "rm -rf .next node_modules package-lock.json && npm cache clean --force && npm install",
     "fresh-start": "npm run rebuild && npm run dev",
+    "backup": "./backup.sh",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
