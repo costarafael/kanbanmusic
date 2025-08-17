@@ -24,20 +24,33 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
 
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
+    console.log('Starting audio upload:', { name: file.name, size: file.size, type: file.type });
+    
     try {
+      // Check file size (Vercel has a 50MB limit for body payload)
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error('File size must be less than 50MB for upload to Vercel');
+      }
+      
       const formData = new FormData();
       formData.append('audio', file);
       
+      console.log('Sending request to /api/upload/audio');
       const response = await fetch('/api/upload/audio', {
         method: 'POST',
         body: formData,
       });
+      
+      console.log('Upload response status:', response.status);
 
       if (!response.ok) {
-        throw new Error('Failed to upload audio file');
+        const errorText = await response.text();
+        console.error('Upload failed:', response.status, errorText);
+        throw new Error(`Failed to upload audio file: ${response.status} ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Upload successful:', data);
       const uploadedUrl = data.url;
       
       onAudioUrlChange(uploadedUrl);
@@ -48,7 +61,8 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       }
     } catch (error) {
       console.error('Error uploading audio:', error);
-      alert('Failed to upload audio file');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to upload audio file: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
@@ -135,9 +149,9 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         return;
       }
       
-      // Validate file size (max 100MB)
-      if (file.size > 100 * 1024 * 1024) {
-        alert('File size must be less than 100MB');
+      // Validate file size (max 50MB for Vercel)
+      if (file.size > 50 * 1024 * 1024) {
+        alert('File size must be less than 50MB for Vercel deployment');
         return;
       }
       
@@ -301,7 +315,7 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
                 )}
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                MP3, WAV, OGG, M4A, AAC (max 100MB)
+                MP3, WAV, OGG, M4A, AAC (max 50MB)
               </p>
             </div>
           </TabsContent>
