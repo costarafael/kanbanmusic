@@ -1,0 +1,109 @@
+"use client";
+
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { CompactPlayer } from "@/components/audio/CompactPlayer";
+import { StarRating } from "@/components/ui/star-rating";
+import { Card as ShadCard, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDndContext, useDroppable } from "@dnd-kit/core";
+import { extractPlainText, truncateToLines } from "@/lib/utils/description-helpers";
+
+interface CardProps {
+  card: any;
+  onCardClick?: (cardId: string) => void;
+}
+
+export function Card({ card, onCardClick }: CardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: card.id,
+    data: { type: "Card", card },
+  });
+
+  const { isOver } = useDroppable({
+    id: `${card.id}-dropzone`,
+    data: { type: "Card", card },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const { active } = useDndContext();
+  const isDragging = active?.id === card.id;
+  const isBeingDraggedOver = isOver && active?.id !== card.id && active?.data.current?.type === "Card";
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!isDragging && onCardClick) {
+      e.stopPropagation();
+      onCardClick(card.id);
+    }
+  };
+
+  return (
+    <>
+      <ShadCard
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        className={`mb-2 relative transition-all duration-200 ${
+          isDragging ? "opacity-30" : "opacity-100"
+        } ${
+          isBeingDraggedOver ? "border-2 border-dashed border-blue-400 bg-blue-50 transform scale-105" : "hover:scale-[1.01]"
+        }`}
+      >
+        {/* Drag handle - only for dragging */}
+        <div 
+          {...listeners}
+          className="absolute top-2 right-2 w-4 h-4 cursor-grab opacity-20 hover:opacity-50 z-10 transition-opacity duration-200 rounded-sm"
+          style={{ 
+            background: 'radial-gradient(circle, #64748b 1px, transparent 1px)', 
+            backgroundSize: '3px 3px',
+            backgroundPosition: '1px 1px'
+          }}
+        />
+        
+        {/* Card content - clickable for opening sheet */}
+        <div onClick={handleCardClick} className="cursor-pointer">
+          <CardHeader>
+            {/* Title with optional avatar */}
+            <div className="flex items-center gap-3 mb-2">
+              {/* Avatar cover */}
+              {card.coverUrl && (
+                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                  <img 
+                    src={card.coverUrl} 
+                    alt={card.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <CardTitle className="text-sm flex-1">{card.title}</CardTitle>
+            </div>
+            
+            {/* Description preview - only show if enabled */}
+            {card.showDescriptionInPreview && card.description && (
+              <div className="text-xs text-slate-600 mb-3 leading-relaxed bg-slate-50 p-2 rounded-md border-l-2 border-slate-200 whitespace-pre-wrap">
+                {truncateToLines(extractPlainText(card.description), 6)}
+              </div>
+            )}
+            
+            {/* Rating - readonly in preview */}
+            {card.rating > 0 && (
+              <div className="flex justify-start">
+                <StarRating rating={card.rating || 0} readonly size="sm" />
+              </div>
+            )}
+          </CardHeader>
+        </div>
+        
+        {/* Audio player - separate from clickable area to prevent conflicts */}
+        {card.audioUrl && (
+          <div className="p-0 m-0" onClick={(e) => e.stopPropagation()}>
+            <CompactPlayer audioUrl={card.audioUrl} cardId={card.id} />
+          </div>
+        )}
+      </ShadCard>
+    </>
+  );
+}
