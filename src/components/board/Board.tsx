@@ -101,9 +101,11 @@ export function Board({ boardId }: BoardProps) {
     })
   );
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["board", boardId],
     queryFn: () => fetchBoardData(boardId),
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { mutate: updateCardMutation } = useMutation({ 
@@ -358,6 +360,21 @@ export function Board({ boardId }: BoardProps) {
 
   if (isLoading) {
     return <BoardSkeleton />;
+  }
+
+  if (error) {
+    return <div className="min-h-screen bg-slate-200 p-4 flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-red-600 mb-2">Error loading board</p>
+        <p className="text-slate-600 text-sm">{error.message}</p>
+      </div>
+    </div>;
+  }
+
+  if (!data) {
+    return <div className="min-h-screen bg-slate-200 p-4 flex items-center justify-center">
+      <p className="text-slate-600">Board not found or failed to load.</p>
+    </div>;
   }
 
   const { columns, cards } = data;
