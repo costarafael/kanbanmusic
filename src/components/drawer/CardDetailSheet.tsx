@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Archive, MoreHorizontal } from "lucide-react";
+import { TagsInput } from "@/components/ui/tags-input";
+import { useQuery } from "@tanstack/react-query";
 
 interface CardDetailSheetProps {
   card: any;
@@ -42,8 +44,34 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
   const [audioUrl, setAudioUrl] = useState(card?.audioUrl || "");
   const [coverUrl, setCoverUrl] = useState(card?.coverUrl || "");
   const [rating, setRating] = useState(card?.rating || 0);
+  const [tags, setTags] = useState<string[]>(card?.tags || []);
   const [showDescriptionInPreview, setShowDescriptionInPreview] = useState(card?.showDescriptionInPreview || false);
+  const [showTagsInPreview, setShowTagsInPreview] = useState(card?.showTagsInPreview !== false); // Default true
   const queryClient = useQueryClient();
+
+  // Fetch board tags for autocomplete
+  const { data: boardTags } = useQuery({
+    queryKey: ["board-tags", card?.columnId],
+    queryFn: async () => {
+      if (!card?.columnId) return { tags: [] };
+      // We need to get the board ID from the card, but we don't have it directly
+      // For now, we'll extract it from the context or make an additional API call
+      // Let's assume we can get it from the current URL or pass it as prop
+      const response = await fetch(`/api/boards/${getBoardIdFromCard(card)}/tags`);
+      if (!response.ok) return { tags: [] };
+      return response.json();
+    },
+    enabled: !!card?.columnId,
+  });
+
+  // Helper function to get board ID - this might need adjustment based on your routing
+  function getBoardIdFromCard(_card: any) {
+    // This is a temporary solution - you might need to pass boardId as prop
+    // or extract it from the current URL
+    const url = window.location.pathname;
+    const match = url.match(/\/b\/([^\/]+)/);
+    return match ? match[1] : "";
+  }
 
   // Sync state when card changes
   useEffect(() => {
@@ -52,7 +80,9 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
       setAudioUrl(card.audioUrl || "");
       setCoverUrl(card.coverUrl || "");
       setRating(card.rating || 0);
+      setTags(card.tags || []);
       setShowDescriptionInPreview(card.showDescriptionInPreview || false);
+      setShowTagsInPreview(card.showTagsInPreview !== false);
     }
   }, [card]);
 
@@ -88,9 +118,35 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
     updateCardMutation({ id: card.id, rating: newRating });
   };
 
+  const handleTagsChange = async (newTags: string[]) => {
+    setTags(newTags);
+    updateCardMutation({ id: card.id, tags: newTags });
+    
+    // Update board's known tags
+    try {
+      const boardId = getBoardIdFromCard(card);
+      if (boardId) {
+        await fetch(`/api/boards/${boardId}/tags`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tags: newTags }),
+        });
+        // Invalidate board tags query to refresh autocomplete
+        queryClient.invalidateQueries({ queryKey: ["board-tags"] });
+      }
+    } catch (error) {
+      console.error('Failed to update board tags:', error);
+    }
+  };
+
   const handleShowDescriptionToggle = (checked: boolean) => {
     setShowDescriptionInPreview(checked);
     updateCardMutation({ id: card.id, showDescriptionInPreview: checked });
+  };
+
+  const handleShowTagsToggle = (checked: boolean) => {
+    setShowTagsInPreview(checked);
+    updateCardMutation({ id: card.id, showTagsInPreview: checked });
   };
 
   const handleArchiveCard = () => {
@@ -179,9 +235,31 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
                 )}
               </div>
 
+              {/* Tags Section */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-slate-700">Tags</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">Show in preview</span>
+                    <Switch
+                      checked={showTagsInPreview}
+                      onCheckedChange={handleShowTagsToggle}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+                <TagsInput
+                  tags={tags}
+                  onTagsChange={handleTagsChange}
+                  suggestions={boardTags?.tags || []}
+                  placeholder="Add tags like 'rock indie', 'summer songs'..."
+                />
+              </div>
+
               {/* Description Section */}
               <div>
                 <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-slate-700">Description</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-500">Show in preview</span>
                     <Switch

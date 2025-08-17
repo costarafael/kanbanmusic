@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CompactPlayer } from "@/components/audio/CompactPlayer";
 import { StarRating } from "@/components/ui/star-rating";
 import { Card as ShadCard, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { extractPlainText, truncateToLines } from "@/lib/utils/description-helpers";
 
@@ -81,9 +82,25 @@ export function Card({ card, onCardClick }: CardProps) {
               <CardTitle className="text-sm flex-1">{card.title}</CardTitle>
             </div>
             
-            {/* Description preview - only show if enabled */}
+            {/* Tags preview - show by default if tags exist and not explicitly disabled */}
+            {card.showTagsInPreview !== false && card.tags && card.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {card.tags.slice(0, 3).map((tag: string, index: number) => (
+                  <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
+                    {tag}
+                  </Badge>
+                ))}
+                {card.tags.length > 3 && (
+                  <Badge variant="outline" className="text-xs px-2 py-1">
+                    +{card.tags.length - 3}
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Description preview - only show if enabled, without border/background */}
             {card.showDescriptionInPreview && card.description && (
-              <div className="text-xs text-slate-600 mb-3 leading-relaxed bg-slate-50 p-2 rounded-md border-l-2 border-slate-200 whitespace-pre-wrap">
+              <div className="text-xs text-slate-600 mb-3 leading-relaxed whitespace-pre-wrap">
                 {truncateToLines(extractPlainText(card.description), 6)}
               </div>
             )}

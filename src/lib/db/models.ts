@@ -8,7 +8,9 @@ const cardSchema = new Schema({
   audioUrl: { type: String },
   coverUrl: { type: String }, // URL da imagem de cover
   rating: { type: Number, min: 0, max: 5, default: 0 }, // Rating de 0-5 estrelas
+  tags: [{ type: String, trim: true }], // Array de tags
   showDescriptionInPreview: { type: Boolean, default: false }, // Mostrar descrição no preview
+  showTagsInPreview: { type: Boolean, default: true }, // Mostrar tags no preview (default ativo)
   order: { type: Number, required: true },
   columnId: { type: String, required: true },
   status: { type: String, enum: ['active', 'archived'], default: 'active' },
@@ -26,6 +28,7 @@ const columnSchema = new Schema({
 const boardSchema = new Schema({
   id: { type: String, required: true, unique: true }, // nanoid
   title: { type: String, required: true, default: 'Novo Board', trim: true },
+  knownTags: [{ type: String, trim: true }], // Lista de tags conhecidas do board
 }, { timestamps: true });
 
 export const Card = models.Card || model('Card', cardSchema);
