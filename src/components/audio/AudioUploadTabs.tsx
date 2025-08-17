@@ -27,9 +27,9 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
     console.log('Starting audio upload:', { name: file.name, size: file.size, type: file.type });
     
     try {
-      // Check file size (Vercel has a 50MB limit for body payload)
-      if (file.size > 50 * 1024 * 1024) {
-        throw new Error('File size must be less than 50MB for upload to Vercel');
+      // Check file size (Vercel Hobby plan has 4.5MB limit for function payload)
+      if (file.size > 4 * 1024 * 1024) {
+        throw new Error('File size must be less than 4MB for Vercel Hobby plan');
       }
       
       const formData = new FormData();
@@ -149,9 +149,9 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         return;
       }
       
-      // Validate file size (max 50MB for Vercel)
-      if (file.size > 50 * 1024 * 1024) {
-        alert('File size must be less than 50MB for Vercel deployment');
+      // Validate file size (max 4MB for Vercel Hobby plan)
+      if (file.size > 4 * 1024 * 1024) {
+        alert('File size must be less than 4MB for Vercel Hobby plan');
         return;
       }
       
@@ -315,7 +315,7 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
                 )}
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                MP3, WAV, OGG, M4A, AAC (max 50MB)
+                MP3, WAV, OGG, M4A, AAC (max 4MB)
               </p>
             </div>
           </TabsContent>

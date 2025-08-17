@@ -62,13 +62,13 @@ export async function handleFileUpload(
 export const UPLOAD_CONFIGS = {
   audio: {
     allowedTypes: ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/aac', 'audio/mpeg'] as string[],
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 4 * 1024 * 1024, // 4MB (Vercel Hobby limit)
     directory: 'audio',
     fieldName: 'audio'
   },
   cover: {
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as string[],
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 4 * 1024 * 1024, // 4MB (Vercel Hobby limit)
     directory: 'covers',
     fieldName: 'cover'
   }
