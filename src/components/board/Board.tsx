@@ -394,7 +394,7 @@ export function Board({ boardId }: BoardProps) {
     </div>;
   }
 
-  const { columns, cards } = data;
+  const { columns = [], cards = [] } = data || {};
 
   return (
     <DndContext 

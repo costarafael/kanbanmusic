@@ -8,25 +8,39 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await dbConnect();
-
+  console.log('GET /api/boards/[id] - Starting request');
+  
   try {
+    await dbConnect();
+    console.log('GET /api/boards/[id] - MongoDB connected');
+
     const { id } = await params;
+    console.log('GET /api/boards/[id] - Board ID:', id);
+    
     if (!id) {
+      console.log('GET /api/boards/[id] - No ID provided');
       return NextResponse.json({ error: 'Board ID not found in URL' }, { status: 400 });
     }
 
     const board = await Board.findOne({ id });
+    console.log('GET /api/boards/[id] - Board found:', !!board);
+    
     if (!board) {
+      console.log('GET /api/boards/[id] - Board not found for ID:', id);
       return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
 
     const columns = await Column.find({ boardId: id, status: 'active' }).sort({ order: 1 });
+    console.log('GET /api/boards/[id] - Columns found:', columns.length);
+    
     const cards = await Card.find({ columnId: { $in: columns.map(c => c.id) }, status: 'active' }).sort({ order: 1 });
+    console.log('GET /api/boards/[id] - Cards found:', cards.length);
 
-    return NextResponse.json({ board, columns, cards });
+    const response = { board, columns, cards };
+    console.log('GET /api/boards/[id] - Sending response');
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching board:', error);
+    console.error('GET /api/boards/[id] - Error:', error);
     return NextResponse.json({ error: 'Failed to fetch board' }, { status: 500 });
   }
 }
