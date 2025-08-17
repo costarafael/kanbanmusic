@@ -32,26 +32,53 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         throw new Error('File size must be less than 100MB');
       }
       
-      // Use new audio upload API that includes AI analysis
-      const formData = new FormData();
-      formData.append('audio', file);
+      const FILE_SIZE_LIMIT_VERCEL = 4.5 * 1024 * 1024; // 4.5MB limit for Vercel Functions
       
-      console.log('Uploading file with AI analysis...');
-      const response = await fetch('/api/upload/audio', {
-        method: 'POST',
-        body: formData
-      });
+      let uploadedUrl: string;
+      let musicAiNotes: string | undefined;
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Upload failed:', response.status, response.statusText, errorData);
-        throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
+      if (file.size <= FILE_SIZE_LIMIT_VERCEL) {
+        // Use server upload for smaller files (includes AI analysis)
+        console.log('Using server upload for file under 4.5MB...');
+        
+        const formData = new FormData();
+        formData.append('audio', file);
+        
+        const response = await fetch('/api/upload/audio', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('Server upload failed:', response.status, response.statusText, errorData);
+          throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        uploadedUrl = result.url;
+        musicAiNotes = result.music_ai_notes;
+        
+        console.log('Server upload successful:', result);
+      } else {
+        // Use client upload for larger files (no AI analysis for now)
+        console.log('Using client upload for file over 4.5MB...');
+        
+        const { upload } = await import('@vercel/blob/client');
+        
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload/audio-presigned',
+        });
+        
+        uploadedUrl = blob.url;
+        console.log('Client upload successful:', blob.url);
+        
+        // TODO: For large files, we could implement a separate AI analysis step
+        // by calling the analysis API with the uploaded URL
       }
       
-      const result = await response.json();
-      console.log('Upload successful:', result);
-      
-      onAudioUrlChange(result.url, result.music_ai_notes);
+      onAudioUrlChange(uploadedUrl, musicAiNotes);
       
       // Check if MP3 has embedded cover art
       if (file.type === 'audio/mpeg' || file.type === 'audio/mp3') {
