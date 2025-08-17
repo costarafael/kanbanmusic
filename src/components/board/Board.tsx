@@ -29,11 +29,28 @@ interface CardUpdateData {
 }
 
 async function fetchBoardData(boardId: string) {
-  const res = await fetch(`/api/boards/${boardId}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch board data");
+  console.log('Fetching board data for:', boardId);
+  const startTime = Date.now();
+  
+  try {
+    const res = await fetch(`/api/boards/${boardId}`);
+    const endTime = Date.now();
+    
+    console.log(`Fetch completed in ${endTime - startTime}ms`);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Fetch failed:', res.status, errorText);
+      throw new Error(`Failed to fetch board data: ${res.status} ${errorText}`);
+    }
+    
+    const data = await res.json();
+    console.log('Board data received:', data);
+    return data;
+  } catch (error) {
+    console.error('fetchBoardData error:', error);
+    throw error;
   }
-  return res.json();
 }
 
 async function updateCard(card: CardUpdateData) {
