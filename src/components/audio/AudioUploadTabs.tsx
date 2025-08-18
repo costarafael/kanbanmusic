@@ -32,30 +32,57 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
         throw new Error('File size must be less than 100MB');
       }
       
-      // TEMPORARY: Use server upload for all files due to Vercel auth protection
-      // TODO: Fix Vercel project authentication settings to allow public presigned URLs
-      console.log('Using server upload (auth protection prevents client upload)...');
+      const FILE_SIZE_LIMIT_VERCEL = 4.5 * 1024 * 1024; // 4.5MB limit for Vercel Functions
       
-      const formData = new FormData();
-      formData.append('audio', file);
+      let uploadedUrl: string;
+      let musicAiNotes: string | undefined;
       
-      console.log('Starting server upload...');
-      const response = await fetch('/api/upload/audio', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Server upload failed:', response.status, response.statusText, errorData);
-        throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
+      if (file.size <= FILE_SIZE_LIMIT_VERCEL) {
+        // Use server upload for smaller files (includes AI analysis)
+        console.log('Using server upload for file under 4.5MB...');
+        
+        const formData = new FormData();
+        formData.append('audio', file);
+        
+        const response = await fetch('/api/upload/audio', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('Server upload failed:', response.status, response.statusText, errorData);
+          throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        uploadedUrl = result.url;
+        musicAiNotes = result.music_ai_notes;
+        
+        console.log('Server upload successful:', result);
+      } else {
+        // Use client upload for larger files (auth protection now disabled)
+        console.log('Using client upload for file over 4.5MB...');
+        
+        try {
+          const { upload } = await import('@vercel/blob/client');
+          
+          const blob = await upload(file.name, file, {
+            access: 'public',
+            handleUploadUrl: '/api/upload/audio-presigned',
+          });
+          
+          uploadedUrl = blob.url;
+          console.log('Client upload successful:', blob.url);
+          
+          // Skip AI analysis for large files to avoid server timeout
+          console.log('Skipping AI analysis for large file');
+          
+        } catch (clientUploadError) {
+          console.error('Client upload failed:', clientUploadError);
+          throw new Error(`Client upload failed: ${clientUploadError instanceof Error ? clientUploadError.message : 'Unknown error'}`);
+        }
       }
-      
-      const result = await response.json();
-      const uploadedUrl = result.url;
-      const musicAiNotes = result.music_ai_notes;
-      
-      console.log('Server upload successful:', result);
       
       onAudioUrlChange(uploadedUrl, musicAiNotes);
       
