@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-async function callLPMusicCapsAPI(audioFile: File): Promise<string | null> {
+async function callHuggingFaceMusicAPI(audioFile: File): Promise<string | null> {
   try {
-    console.log('🎵 Calling LP-MusicCaps for audio analysis...');
+    console.log('🎵 Calling Hugging Face Music API for analysis...');
     
     const formData = new FormData();
     formData.append('audio', audioFile);
@@ -12,39 +12,32 @@ async function callLPMusicCapsAPI(audioFile: File): Promise<string | null> {
       ? `https://${process.env.VERCEL_URL}` 
       : process.env.NODE_ENV === 'development' 
         ? 'http://localhost:3001' 
-        : 'https://kanbanmusic-fqmlybkuk-costarafaels-projects.vercel.app';
+        : 'https://kanbanmusic.vercel.app';
     
-    const response = await fetch(`${baseUrl}/api/ai/lp-music-caps`, {
+    const response = await fetch(`${baseUrl}/api/ai/huggingface-music`, {
       method: 'POST',
       body: formData,
     });
 
     if (!response.ok) {
-      console.error('LP-MusicCaps API error:', response.status, response.statusText);
+      console.error('Hugging Face Music API error:', response.status, response.statusText);
       return null;
     }
 
     const result = await response.json();
     
-    if (result.success && result.analysis?.music_caption?.text) {
-      // Extract a summary from the full analysis
-      const fullCaption = result.analysis.music_caption.text;
-      const insights = result.analysis.extracted_insights;
-      
-      const summary = `🎵 Music Analysis:\n\n` +
-        `Genre: ${insights?.genre || 'Unknown'}\n` +
-        `Mood: ${insights?.mood || 'Unknown'}\n` +
-        `Tempo: ${insights?.tempo || 'Unknown'}\n` +
-        `Instruments: ${insights?.instruments?.join(', ') || 'Unknown'}\n\n` +
-        `AI Description:\n${fullCaption.substring(0, 500)}${fullCaption.length > 500 ? '...' : ''}`;
-      
-      console.log('✅ LP-MusicCaps analysis completed');
-      return summary;
+    if (result.success && result.musicNotes) {
+      console.log('✅ Hugging Face music analysis completed');
+      return result.musicNotes;
+    }
+    
+    if (result.error) {
+      console.error('Hugging Face API returned error:', result.error);
     }
     
     return null;
   } catch (error) {
-    console.error('Error calling LP-MusicCaps:', error);
+    console.error('Error calling Hugging Face Music API:', error);
     return null;
   }
 }
@@ -89,9 +82,9 @@ export async function POST(request: NextRequest) {
     console.log('✅ Blob upload successful:', blob.url);
     const uploadedUrl = blob.url;
     
-    // Call LP-MusicCaps API for music analysis
+    // Call Hugging Face Music API for music analysis
     console.log('🔄 Processing music analysis for uploaded file...');
-    const musicAnalysis = await callLPMusicCapsAPI(file);
+    const musicAnalysis = await callHuggingFaceMusicAPI(file);
 
     const response = {
       url: uploadedUrl,

@@ -81,24 +81,15 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
             const formData = new FormData();
             formData.append('audio', file);
             
-            const aiResponse = await fetch('/api/ai/lp-music-caps', {
+            const aiResponse = await fetch('/api/ai/huggingface-music', {
               method: 'POST',
               body: formData
             });
             
             if (aiResponse.ok) {
               const aiResult = await aiResponse.json();
-              if (aiResult.success && aiResult.analysis?.music_caption?.text) {
-                const fullCaption = aiResult.analysis.music_caption.text;
-                const insights = aiResult.analysis.extracted_insights;
-                
-                musicAiNotes = `🎵 Music Analysis:\n\n` +
-                  `Genre: ${insights?.genre || 'Unknown'}\n` +
-                  `Mood: ${insights?.mood || 'Unknown'}\n` +
-                  `Tempo: ${insights?.tempo || 'Unknown'}\n` +
-                  `Instruments: ${insights?.instruments?.join(', ') || 'Unknown'}\n\n` +
-                  `AI Description:\n${fullCaption.substring(0, 500)}${fullCaption.length > 500 ? '...' : ''}`;
-                
+              if (aiResult.success && aiResult.musicNotes) {
+                musicAiNotes = aiResult.musicNotes;
                 console.log('AI analysis successful for large file');
               }
             } else {

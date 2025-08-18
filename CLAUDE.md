@@ -201,26 +201,13 @@ src/
 - Exibição condicional (só aparece se houver análise)
 - Formatação automática com emoji e estrutura
 
-## 🎯 Próximos Passos - PRIORIDADES
+## 🎯 Próximos Passos
 
-### 🔥 Alta Prioridade
-- **[ ] Integração LP-MusicCaps Melhorada**: Otimizar análise AI para arquivos grandes
-  - Implementar timeout configurável
-  - Análise em background para arquivos > 4.5MB
-  - Retry mechanism para falhas temporárias
-  - Interface para re-processar análise AI manualmente
-
-### 🟡 Média Prioridade
-- **[ ] Interface de Re-análise**: Botão para refazer análise AI de arquivos já uploaded
-- **[ ] Melhorias de Performance**: Otimizar carregamento de boards grandes
-- **[ ] Tags Avançadas**: Filtros por tags, tags populares, sugestões inteligentes
-
-### 🔵 Baixa Prioridade
-- **[ ] Autenticação de usuários**: Sistema de login/registro
-- **[ ] Colaboração em tempo real**: WebSockets para updates simultâneos
-- **[ ] Histórico de atividades**: Timeline de mudanças
-- **[ ] Templates de boards**: Boards pré-configurados
-- **[ ] Exportação de dados**: CSV, JSON export
+### 🔥 Foco Atual: Integração Hugging Face LP-MusicCaps
+- **[X] API Hugging Face Direta**: Implementar chamada direta ao modelo seungheondoh/lp-music-caps
+- **[X] Music Notes Field**: Campo dedicado para análise AI de música
+- **[X] Conversão de Áudio**: Processar áudio no formato adequado para o modelo
+- **[ ] Otimizações**: Melhorar performance e tratamento de erros
 
 ## 🔧 Configurações Importantes
 
@@ -228,12 +215,14 @@ src/
 ```
 MONGODB_URI=your_mongodb_connection_string
 BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+HUGGINGFACE_API_TOKEN=your_hf_token
 ```
 
 ### Environment Variables (Vercel Production)
 ```
 MONGODB_URI=production_mongodb_uri
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_token
+HUGGINGFACE_API_TOKEN=production_hf_token
 ```
 
 ### Dependencies Principais
