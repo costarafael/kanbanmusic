@@ -75,8 +75,38 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
           uploadedUrl = blob.url;
           console.log('Client upload successful:', blob.url);
           
-          // Skip AI analysis for large files to avoid server timeout
-          console.log('Skipping AI analysis for large file');
+          // Optional: Try AI analysis for large files (may timeout, but worth trying)
+          console.log('Attempting AI analysis for large file...');
+          try {
+            const formData = new FormData();
+            formData.append('audio', file);
+            
+            const aiResponse = await fetch('/api/ai/lp-music-caps', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (aiResponse.ok) {
+              const aiResult = await aiResponse.json();
+              if (aiResult.success && aiResult.analysis?.music_caption?.text) {
+                const fullCaption = aiResult.analysis.music_caption.text;
+                const insights = aiResult.analysis.extracted_insights;
+                
+                musicAiNotes = `🎵 Music Analysis:\n\n` +
+                  `Genre: ${insights?.genre || 'Unknown'}\n` +
+                  `Mood: ${insights?.mood || 'Unknown'}\n` +
+                  `Tempo: ${insights?.tempo || 'Unknown'}\n` +
+                  `Instruments: ${insights?.instruments?.join(', ') || 'Unknown'}\n\n` +
+                  `AI Description:\n${fullCaption.substring(0, 500)}${fullCaption.length > 500 ? '...' : ''}`;
+                
+                console.log('AI analysis successful for large file');
+              }
+            } else {
+              console.log('AI analysis failed for large file, but upload succeeded');
+            }
+          } catch (aiError) {
+            console.log('AI analysis timed out for large file, but upload succeeded');
+          }
           
         } catch (clientUploadError) {
           console.error('Client upload failed:', clientUploadError);

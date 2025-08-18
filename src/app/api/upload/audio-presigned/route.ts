@@ -48,6 +48,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             'audio/aac'
           ],
           maximumSizeInBytes: 100 * 1024 * 1024, // 100MB
+          addRandomSuffix: true, // Prevent conflicts with same filename
           tokenPayload: JSON.stringify({
             uploadedAt: new Date().toISOString(),
             originalFilename: pathname,
