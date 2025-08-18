@@ -27,6 +27,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             'image/gif'
           ],
           maximumSizeInBytes: 100 * 1024 * 1024, // 100MB
+          addRandomSuffix: true,
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {

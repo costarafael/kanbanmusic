@@ -276,18 +276,20 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
                 />
               </div>
 
-              {/* Music AI Notes Section */}
-              {musicAiNotes && (
+              {/* Music AI Notes Section - Always show if audio exists */}
+              {audioUrl && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-slate-700">Music AI Notes</span>
-                    <span className="text-xs text-slate-400">AI-generated analysis</span>
+                    <span className="text-xs text-slate-400">
+                      {musicAiNotes ? "AI-generated analysis" : "AI analysis not available"}
+                    </span>
                   </div>
                   <Textarea
                     value={musicAiNotes}
                     onChange={(e) => setMusicAiNotes(e.target.value)}
                     onBlur={handleMusicAiNotesChange}
-                    placeholder="AI-generated music analysis will appear here..."
+                    placeholder={musicAiNotes ? "AI-generated music analysis..." : "AI music analysis is currently not available. The LP-MusicCaps model is not deployed on Hugging Face Inference API. You can add manual notes here."}
                     className="min-h-[120px] text-sm"
                     readOnly={false}
                   />

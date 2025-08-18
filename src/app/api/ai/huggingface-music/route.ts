@@ -32,6 +32,9 @@ async function callHuggingFaceAPI(audioBuffer: ArrayBuffer): Promise<string | nu
       console.error('❌ Hugging Face API error:', response.status, response.statusText, errorText);
       
       // Handle specific errors
+      if (response.status === 404) {
+        throw new Error('LP-MusicCaps model is not available through Hugging Face Inference API. The model exists but is not deployed by any inference providers.');
+      }
       if (response.status === 503) {
         throw new Error('Model is loading, please try again in a few minutes');
       }
