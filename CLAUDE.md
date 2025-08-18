@@ -64,7 +64,7 @@
 ### API Routes
 - `/api/upload/audio` - Server upload para arquivos pequenos com AI
 - `/api/upload/audio-presigned` - Presigned URLs para client upload de arquivos grandes  
-- `/api/ai/huggingface-music` - Integração com Hugging Face (limitada por disponibilidade do modelo)
+- `/api/ai/clap-music` - **NOVO**: Análise musical com CLAP (Contrastive Language-Audio Pretraining)
 
 ### Utilities
 - `validation-helpers.ts` - Funções de validação consolidadas
@@ -209,23 +209,26 @@ src/
 - Exibição condicional (só aparece se houver análise)
 - Formatação automática com emoji e estrutura
 
-## 🚨 Status Atual da Integração AI
+## 🎵 Status Atual da Integração AI
 
-### ❌ Problema Identificado: LP-MusicCaps Não Disponível
-- **Modelo seungheondoh/lp-music-caps existe** mas não está disponível via Hugging Face Inference API
-- **Status**: "NOT deployed by any Inference Providers" 
-- **Impacto**: Análise AI de música não funciona no momento
+### ✅ SOLUÇÃO IMPLEMENTADA: CLAP Music Analysis
+- **Modelo CLAP (laion/larger_clap_music_and_speech)** implementado com sucesso
+- **Disponível via Hugging Face Inference API**
+- **Funcionalidades**: Genre classification, mood detection, instrument identification, musical style analysis
 
-### ✅ Soluções Implementadas
-- **[X] Tratamento de Erro Robusto**: API retorna erro descritivo sobre indisponibilidade
-- **[X] Music Notes Field**: Campo sempre aparece quando há áudio, permitindo notas manuais
-- **[X] Cover Extraction Fixed**: Corrigido problema com `addRandomSuffix` para extração de capas
-- **[X] Fallback Gracioso**: Upload sempre funciona, AI é opcional
+### ✅ Capacidades do CLAP
+- **[X] Zero-shot Audio Classification**: Classifica música sem treino específico
+- **[X] Genre Detection**: Rock, Pop, Jazz, Classical, Electronic, Hip Hop, Folk, etc.
+- **[X] Mood Analysis**: Happy, Sad, Energetic, Calm, Intense, Romantic, Dramatic
+- **[X] Instrument Recognition**: Guitar, Piano, Violin, Drums, Synthesizer, Saxophone
+- **[X] Style Classification**: Instrumental, Vocal, Acoustic, Electronic, Slow, Fast
+- **[X] Confidence Scoring**: Retorna score de confiança da análise
 
-### 🔄 Próximos Passos para AI
-- **[ ] Pesquisar APIs Alternativas**: Buscar outras APIs de análise musical
-- **[ ] Implementar Solução Local**: Considerar hospedar modelo próprio
-- **[ ] Integração com Spotify/LastFM**: APIs para metadata musical
+### 🔧 Configuração Técnica
+- **Endpoint**: `/api/ai/clap-music`
+- **Limite de arquivo**: 10MB (otimizado para performance)
+- **Formatos suportados**: MP3, WAV, OGG, M4A, AAC
+- **Token necessário**: `HUGGINGFACE_API_TOKEN` (já configurado)
 
 ## 🔧 Configurações Importantes
 

@@ -14,7 +14,7 @@ async function callHuggingFaceMusicAPI(audioFile: File): Promise<string | null> 
         ? 'http://localhost:3001' 
         : 'https://kanbanmusic.vercel.app';
     
-    const response = await fetch(`${baseUrl}/api/ai/huggingface-music`, {
+    const response = await fetch(`${baseUrl}/api/ai/clap-music`, {
       method: 'POST',
       body: formData,
     });

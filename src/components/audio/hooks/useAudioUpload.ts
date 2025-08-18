@@ -65,7 +65,7 @@ export function useAudioUpload() {
             const formData = new FormData();
             formData.append('audio', file);
             
-            const aiResponse = await fetch('/api/ai/huggingface-music', {
+            const aiResponse = await fetch('/api/ai/clap-music', {
               method: 'POST',
               body: formData
             });
