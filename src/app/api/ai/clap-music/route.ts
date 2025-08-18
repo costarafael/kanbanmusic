@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { spawn } from 'child_process';
+import fs from 'fs/promises';
+import path from 'path';
+import { tmpdir } from 'os';
 
 interface ClapMusicResult {
   success: boolean;
@@ -16,9 +20,116 @@ interface ClapMusicResult {
 }
 
 /**
+ * Create fallback analysis based on filename
+ */
+function createFallbackAnalysis(filename: string): ClapMusicResult {
+  const lowerName = filename.toLowerCase();
+  
+  // Try to detect genre from filename
+  let genre = 'unknown';
+  if (lowerName.includes('rock')) genre = 'rock';
+  else if (lowerName.includes('pop')) genre = 'pop';
+  else if (lowerName.includes('jazz')) genre = 'jazz';
+  else if (lowerName.includes('classical')) genre = 'classical';
+  else if (lowerName.includes('electronic') || lowerName.includes('edm')) genre = 'electronic';
+  else if (lowerName.includes('hip') || lowerName.includes('hop') || lowerName.includes('rap')) genre = 'hip hop';
+  else if (lowerName.includes('remix')) genre = 'electronic remix';
+  
+  // Try to detect mood from filename
+  let mood = 'unknown';
+  if (lowerName.includes('happy') || lowerName.includes('upbeat')) mood = 'happy';
+  else if (lowerName.includes('sad') || lowerName.includes('melancholic')) mood = 'sad';
+  else if (lowerName.includes('chill') || lowerName.includes('calm')) mood = 'calm';
+  else if (lowerName.includes('party') || lowerName.includes('dance')) mood = 'energetic';
+  else if (lowerName.includes('remix')) mood = 'energetic';
+  
+  // Basic analysis based on filename
+  const analysis = {
+    genre,
+    mood,
+    energy: mood === 'energetic' ? 'high' : mood === 'calm' ? 'low' : 'medium',
+    instruments: [] as string[],
+    style: lowerName.includes('remix') ? 'electronic remix' : 'original',
+    confidence: 0.3 // Low confidence for filename-based analysis
+  };
+  
+  const musicNotes = `🎵 **Music Analysis** (Filename-based)\n\n**Genre:** ${genre.charAt(0).toUpperCase() + genre.slice(1)}\n**Mood:** ${mood.charAt(0).toUpperCase() + mood.slice(1)}\n**Style:** ${analysis.style.charAt(0).toUpperCase() + analysis.style.slice(1)}\n**Confidence:** 30% (Limited analysis)\n\n*Note: AI model unavailable. Analysis based on filename patterns.*`;
+  
+  return {
+    success: true,
+    musicNotes,
+    analysis
+  };
+}
+
+/**
+ * Convert audio to WAV mono 48kHz and trim to first 10 seconds using ffmpeg
+ */
+async function convertAudioToWavMono(audioBuffer: ArrayBuffer, originalFilename: string): Promise<ArrayBuffer> {
+  const tempDir = tmpdir();
+  const inputFile = path.join(tempDir, `input_${Date.now()}_${originalFilename}`);
+  const outputFile = path.join(tempDir, `output_${Date.now()}_converted.wav`);
+  
+  try {
+    // Write input file
+    await fs.writeFile(inputFile, Buffer.from(audioBuffer));
+    console.log('🔄 Converting audio to WAV mono 48kHz and trimming to 10 seconds...');
+    
+    // Convert using ffmpeg: trim to 10 seconds, force mono channel, 48kHz sample rate, 16-bit WAV
+    const ffmpegResult = await new Promise<void>((resolve, reject) => {
+      const ffmpeg = spawn('/opt/homebrew/bin/ffmpeg', [
+        '-i', inputFile,           // Input file
+        '-t', '10',               // Trim to first 10 seconds
+        '-ac', '1',               // Mono (1 audio channel)
+        '-ar', '48000',           // 48kHz sample rate
+        '-sample_fmt', 's16',     // 16-bit signed integer samples
+        '-f', 'wav',              // WAV format
+        '-y',                     // Overwrite output file
+        outputFile                // Output file
+      ]);
+      
+      let stderr = '';
+      ffmpeg.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      ffmpeg.on('close', (code) => {
+        if (code === 0) {
+          console.log('✅ Audio conversion successful');
+          resolve();
+        } else {
+          console.error('❌ FFmpeg conversion failed:', stderr);
+          reject(new Error(`FFmpeg failed with code ${code}: ${stderr}`));
+        }
+      });
+      
+      ffmpeg.on('error', (err) => {
+        console.error('❌ FFmpeg spawn error:', err);
+        reject(err);
+      });
+    });
+    
+    // Read converted file
+    const convertedBuffer = await fs.readFile(outputFile);
+    console.log(`✅ Audio converted: ${audioBuffer.byteLength} bytes → ${convertedBuffer.length} bytes (WAV mono 48kHz)`);
+    
+    return convertedBuffer.buffer as ArrayBuffer;
+    
+  } finally {
+    // Cleanup temporary files
+    try {
+      await fs.unlink(inputFile).catch(() => {});
+      await fs.unlink(outputFile).catch(() => {});
+    } catch (cleanupError) {
+      console.warn('Warning: Failed to cleanup temp files:', cleanupError);
+    }
+  }
+}
+
+/**
  * Call Hugging Face CLAP model for music analysis
  */
-async function callClapModel(audioBuffer: ArrayBuffer): Promise<ClapMusicResult> {
+async function callClapModel(audioBuffer: ArrayBuffer, filename: string): Promise<ClapMusicResult> {
   try {
     console.log('🎵 Calling CLAP model for music analysis...');
     
@@ -26,8 +137,9 @@ async function callClapModel(audioBuffer: ArrayBuffer): Promise<ClapMusicResult>
       throw new Error('HUGGINGFACE_API_TOKEN not configured');
     }
 
-    // Convert audio buffer to base64 for API
-    const base64Audio = Buffer.from(audioBuffer).toString('base64');
+    // Convert audio to WAV mono 48kHz format and trim to 10 seconds
+    const convertedAudioBuffer = await convertAudioToWavMono(audioBuffer, filename);
+    console.log('🎵 Audio converted (10s), sending to LP-MusicCaps model...');
     
     // Define musical categories for zero-shot classification
     const musicLabels = [
@@ -51,23 +163,17 @@ async function callClapModel(audioBuffer: ArrayBuffer): Promise<ClapMusicResult>
       "acoustic unplugged", "heavy distorted", "melodic harmonic"
     ];
 
+    // Send audio directly to LP-MusicCaps model (automatic music captioning)
+    // LP-MusicCaps doesn't need candidate labels - it generates descriptions automatically
     const response = await fetch(
-      'https://api-inference.huggingface.co/models/laion/larger_clap_music_and_speech',
+      'https://api-inference.huggingface.co/models/seungheondoh/lp-music-caps',
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.HUGGINGFACE_API_TOKEN}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'audio/wav',
         },
-        body: JSON.stringify({
-          inputs: {
-            audio: base64Audio
-          },
-          parameters: {
-            candidate_labels: musicLabels,
-            multi_label: true
-          }
-        }),
+        body: convertedAudioBuffer, // Send 10-second WAV directly
       }
     );
 
@@ -81,23 +187,35 @@ async function callClapModel(audioBuffer: ArrayBuffer): Promise<ClapMusicResult>
       if (response.status === 401) {
         throw new Error('Invalid Hugging Face API token');
       }
+      if (response.status === 404) {
+        throw new Error('Audio analysis model not available via Inference API');
+      }
       
       throw new Error(`CLAP API request failed: ${response.status} ${response.statusText}`);
     }
 
     const results = await response.json();
-    console.log('✅ CLAP API response received');
+    console.log('✅ LP-MusicCaps response received:', results);
 
-    // Process results and extract musical insights
-    const analysis = processClapResults(results);
-    
-    // Generate music notes from analysis
-    const musicNotes = formatMusicNotes(analysis);
+    // LP-MusicCaps returns a direct text description
+    let musicDescription = '';
+    if (Array.isArray(results) && results.length > 0) {
+      musicDescription = results[0]?.generated_text || results[0]?.text || JSON.stringify(results[0]);
+    } else if (typeof results === 'string') {
+      musicDescription = results;
+    } else if (results?.generated_text) {
+      musicDescription = results.generated_text;
+    } else {
+      musicDescription = JSON.stringify(results);
+    }
+
+    // Format the LP-MusicCaps description into music notes
+    const musicNotes = formatLPMusicCapsNotes(musicDescription);
 
     return {
       success: true,
       musicNotes,
-      analysis,
+      analysis: undefined, // LP-MusicCaps doesn't provide structured analysis
       rawResults: results
     };
 
@@ -196,7 +314,26 @@ function processClapResults(results: any) {
 }
 
 /**
- * Format analysis into readable music notes
+ * Format LP-MusicCaps description into readable music notes
+ */
+function formatLPMusicCapsNotes(description: string): string {
+  if (!description || description.trim() === '') {
+    return '🎵 **Music AI Analysis**\n\nUnable to analyze this audio file. The LP-MusicCaps model could not generate a description.';
+  }
+
+  // Clean up the description
+  const cleanDescription = description.trim();
+  
+  let notes = '🎵 **Music AI Analysis**\n\n';
+  notes += `**Description:** ${cleanDescription}\n\n`;
+  notes += '*Generated by LP-MusicCaps (Music Captioning)*\n';
+  notes += '*Analysis based on first 10 seconds of audio*';
+  
+  return notes;
+}
+
+/**
+ * Format analysis into readable music notes (legacy CLAP function)
  */
 function formatMusicNotes(analysis: any): string {
   if (!analysis) {
@@ -233,7 +370,7 @@ function formatMusicNotes(analysis: any): string {
 }
 
 export async function POST(request: NextRequest) {
-  console.log('🎵 CLAP music analysis API called');
+  console.log('🎵 LP-MusicCaps music analysis API called');
   
   try {
     const formData = await request.formData();
@@ -246,11 +383,15 @@ export async function POST(request: NextRequest) {
 
     console.log('📁 Processing audio file:', audioFile.name, `(${audioFile.size} bytes, ${audioFile.type})`);
 
-    // Validate file type
+    // Validate file type (accept both correct MIME types and generic octet-stream for audio files)
     const allowedTypes = ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/aac', 'audio/mpeg'];
-    if (!allowedTypes.includes(audioFile.type)) {
-      console.error('❌ Invalid file type:', audioFile.type);
-      return NextResponse.json({ error: `Invalid file type: ${audioFile.type}` }, { status: 400 });
+    const isAudioFile = allowedTypes.includes(audioFile.type) || 
+      (audioFile.type === 'application/octet-stream' && 
+       /\.(mp3|wav|ogg|m4a|aac)$/i.test(audioFile.name));
+    
+    if (!isAudioFile) {
+      console.error('❌ Invalid file type:', audioFile.type, 'for file:', audioFile.name);
+      return NextResponse.json({ error: `Invalid file type: ${audioFile.type} for ${audioFile.name}` }, { status: 400 });
     }
 
     // Validate file size (limit to 10MB for CLAP API)
@@ -266,7 +407,7 @@ export async function POST(request: NextRequest) {
     const audioBuffer = await audioFile.arrayBuffer();
     
     // Call CLAP model
-    const result = await callClapModel(audioBuffer);
+    const result = await callClapModel(audioBuffer, audioFile.name);
     
     if (!result.success) {
       return NextResponse.json({
@@ -275,14 +416,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log('✅ CLAP music analysis completed successfully');
+    console.log('✅ LP-MusicCaps music analysis completed successfully');
     
     return NextResponse.json({
       success: true,
       musicNotes: result.musicNotes,
       analysis: result.analysis,
-      model: 'CLAP (laion/larger_clap_music_and_speech)',
-      provider: 'Hugging Face'
+      model: 'LP-MusicCaps (seungheondoh/lp-music-caps)',
+      provider: 'Hugging Face',
+      audioLength: '10 seconds'
     });
 
   } catch (error: any) {
@@ -301,18 +443,18 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   return NextResponse.json({
-    model: 'CLAP (laion/larger_clap_music_and_speech)',
+    model: 'LP-MusicCaps (seungheondoh/lp-music-caps)',
     provider: 'Hugging Face',
-    description: 'Contrastive Language-Audio Pretraining for music analysis',
+    description: 'Large-scale Language-audio Pre-training for Music Captioning',
     maxFileSize: '10MB',
     supportedFormats: ['MP3', 'WAV', 'OGG', 'M4A', 'AAC'],
     capabilities: [
-      'Genre classification',
-      'Mood detection', 
-      'Instrument identification',
-      'Musical style analysis',
-      'Zero-shot audio classification'
+      'Automatic music captioning',
+      'Music description generation',
+      'Audio content analysis',
+      'Musical feature extraction'
     ],
+    audioLength: '10 seconds (trimmed)',
     endpoint: '/api/ai/clap-music'
   });
 }

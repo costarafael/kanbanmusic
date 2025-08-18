@@ -35,21 +35,6 @@ export function AudioUploadTabs({
     }
   };
 
-  const handleUrlSubmit = async (url: string) => {
-    try {
-      const isValid = await audioUpload.validateAudioUrl(url);
-      
-      if (!isValid) {
-        alert('Invalid audio URL. Please provide a direct link to an audio file (.mp3, .wav, .ogg, .m4a, .aac, .flac)');
-        return;
-      }
-
-      onAudioUrlChange(url);
-    } catch (error) {
-      console.error('Error validating URL:', error);
-      alert('Failed to validate audio URL. Please check the URL and try again.');
-    }
-  };
 
   const handleRemoveAudio = () => {
     onAudioUrlChange("");
@@ -71,7 +56,6 @@ export function AudioUploadTabs({
         currentUrl={currentUrl}
         isUploading={audioUpload.isUploading}
         onFileUpload={handleFileUpload}
-        onUrlSubmit={handleUrlSubmit}
         onRemoveAudio={handleRemoveAudio}
       />
       

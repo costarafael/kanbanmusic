@@ -178,7 +178,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="max-w-[720px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="card-detail-description">
+      <DialogContent className="max-w-[680px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="card-detail-description">
         <DialogHeader className="flex-shrink-0">
           <DialogDescription id="card-detail-description" className="sr-only">
             Edit card details including title, audio, cover, rating, tags, and description
@@ -216,9 +216,9 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto pr-2">
-          <div className="flex gap-6">
-            {/* Left Column - 25% - Cover and Rating */}
-            <div className="w-1/4 space-y-6">
+          <div className="flex gap-4">
+            {/* Left Column - Cover and Rating */}
+            <div className="w-36 flex-shrink-0 space-y-6">
               {/* Cover Section */}
               <div>
                 <CoverUploadCompact
@@ -238,8 +238,8 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
               </div>
             </div>
 
-            {/* Right Column - 75% - Audio, Description */}
-            <div className="w-3/4 space-y-6">
+            {/* Right Column - Audio, Description */}
+            <div className="flex-1 min-w-0 space-y-6">
               {/* Audio Section - First in right column */}
               <div>
                 <AudioUploadTabs
