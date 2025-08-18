@@ -73,61 +73,91 @@ export function CoverUploadCompact({ currentUrl, onCoverUrlChange, aspectRatio =
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">Cover Image</label>
-        {currentUrl && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleRemoveCover}
-          >
-            <X className="h-4 w-4 mr-2" />
-            Remove
-          </Button>
-        )}
       </div>
       
-      {currentUrl && (
-        <div className={`${aspectRatioClass} w-full bg-muted rounded border overflow-hidden mb-3`}>
+      {currentUrl ? (
+        // When there's a cover image - show image with hover buttons
+        <div className={`${aspectRatioClass} w-full bg-muted rounded border overflow-hidden relative group`}>
           <img 
             src={currentUrl} 
             alt="Cover" 
             className="w-full h-full object-cover"
           />
+          {/* Hover overlay with buttons */}
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              disabled={isUploading}
+              className="bg-white/90 hover:bg-white text-black"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Image className="h-4 w-4 mr-2" />
+                  Change Cover
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleRemoveCover}
+              className="bg-red-600/90 hover:bg-red-700 text-white"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Remove
+            </Button>
+          </div>
+        </div>
+      ) : (
+        // When there's no cover - show "Add Cover" button
+        <div className={`${aspectRatioClass} w-full bg-muted rounded border flex items-center justify-center`}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+            disabled={isUploading}
+            className="h-full w-full flex-col gap-2 text-muted-foreground hover:text-foreground"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="text-sm">Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Image className="h-6 w-6" />
+                <span className="text-sm font-medium">Add Cover</span>
+              </>
+            )}
+          </Button>
         </div>
       )}
       
-      <div className="flex gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            fileInputRef.current?.click();
-          }}
-          disabled={isUploading}
-          className="flex-1"
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Image className="h-4 w-4 mr-2" />
-              {currentUrl ? 'Change Cover' : 'Choose Cover'}
-            </>
-          )}
-        </Button>
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      
       <p className="text-xs text-muted-foreground">
         JPEG, PNG, WebP, GIF (max 5MB)
       </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useAudioStore } from "@/lib/store/useAudioStore";
-import { Play, Pause, Square } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -86,31 +85,48 @@ export function MiniPlayer({ audioUrl, cardId }: MiniPlayerProps) {
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !duration) return;
+    if (!audioRef.current) return;
     
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    const newTime = (clickX / rect.width) * duration;
+    const newTime = (clickX / rect.width) * (duration || 100); // Allow clicking even without duration
     
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   };
 
   return (
-    <div className="bg-muted p-3 rounded-lg border space-y-2">
+    <div className="bg-slate-700 p-3 rounded-lg border border-slate-600 space-y-3">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
-      <div className="flex items-center gap-2">
+      {/* Progress bar - Always visible at top */}
+      <div 
+        className="w-full bg-slate-600 rounded-full h-2 cursor-pointer hover:h-3 transition-all duration-200 group"
+        onClick={handleProgressClick}
+      >
+        <div
+          className="bg-slate-100 h-full rounded-full transition-all duration-100 group-hover:bg-white"
+          style={{ width: `${progressPercentage}%` }}
+        />
+      </div>
+      
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePlay}
-          className="h-8 w-8 p-0 flex items-center justify-center"
+          className="h-8 w-8 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600"
         >
           {isPlaying ? (
-            <Pause className="h-4 w-4" />
+            // Filled Pause Icon
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            </svg>
           ) : (
-            <Play className="h-4 w-4 ml-0.5" />
+            // Filled Play Icon
+            <svg className="h-4 w-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
           )}
         </Button>
         
@@ -118,25 +134,17 @@ export function MiniPlayer({ audioUrl, cardId }: MiniPlayerProps) {
           variant="ghost"
           size="sm"
           onClick={handleStop}
-          className="h-8 w-8 p-0 flex items-center justify-center"
+          className="h-8 w-8 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600"
         >
-          <Square className="h-4 w-4" />
+          {/* Filled Square Icon */}
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h12v12H6z"/>
+          </svg>
         </Button>
 
-        <div className="flex-1 text-xs text-muted-foreground font-mono">
-          {formatTime(currentTime)} / {formatTime(duration)}
+        <div className="flex-1 text-xs text-slate-100 font-mono">
+          {formatTime(currentTime)} / {formatTime(duration || 0)}
         </div>
-      </div>
-
-      {/* Progress bar */}
-      <div 
-        className="w-full bg-secondary rounded-full h-2 cursor-pointer hover:h-3 transition-all duration-200"
-        onClick={handleProgressClick}
-      >
-        <div
-          className="bg-primary h-full rounded-full transition-all duration-100"
-          style={{ width: `${progressPercentage}%` }}
-        />
       </div>
 
     </div>

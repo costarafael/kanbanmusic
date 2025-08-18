@@ -25,12 +25,16 @@
   - Preview e remoção de covers
 
 ### ✅ UI/UX Melhorias
-- **Dialog Modals** - Substituição de Sheet drawers por Dialog modals
+- **Dialog Modals** - Substituição de Sheet drawers por Dialog modais
+- **Overlay Sutil** - Dialog overlay reduzido de 80% para 20% de opacidade
 - **Validação de Formulários** - Validação robusta para uploads e URLs
 - **Estados de Loading** - Indicadores visuais durante operações
 - **Responsive Design** - Interface adaptável para diferentes tamanhos de tela
 - **Tags Input** - Componente com navegação por teclado e autocomplete
 - **Card Preview** - Toggles para mostrar/ocultar descrição e tags
+- **Cover Image Hover** - Botões "Change" e "Remove" aparecem apenas no hover
+- **Audio Player Dark** - Player redesenhado com tema escuro e ícones filled
+- **Timeline Sempre Visível** - Progress bar clicável mesmo antes do play
 
 ## 🗂️ Arquitetura de Componentes
 
@@ -195,6 +199,7 @@ src/
 - Integração com Vercel Blob storage
 - Presigned URLs para arquivos grandes
 - Análise AI opcional para arquivos grandes
+- **Interface simplificada**: Removidas tabs, apenas botão "Choose Audio File"
 
 ### ✅ Sistema de Tags Completo
 - Tags com autocomplete baseado no histórico do board
@@ -208,6 +213,13 @@ src/
 - Integração com LP-MusicCaps
 - Exibição condicional (só aparece se houver análise)
 - Formatação automática com emoji e estrutura
+
+### ✅ Melhorias de UX (2025-08-18)
+- **Cover Image Hover**: Botões "Change" e "Remove" aparecem apenas no hover sobre a imagem
+- **Estado sem Cover**: Botão ghost "Add Cover" em vez de "Choose Cover"
+- **Audio Player Dark Theme**: Redesenhado com background `slate-700` e ícones filled
+- **Timeline Interativa**: Progress bar sempre visível e clicável, mesmo antes do play
+- **Dialog Overlay Sutil**: Reduzida opacidade de 80% para 20% para melhor UX
 
 ## 🎵 Status Atual da Integração AI
 
