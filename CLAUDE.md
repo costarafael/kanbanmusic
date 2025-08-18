@@ -35,7 +35,11 @@
 ## 🗂️ Arquitetura de Componentes
 
 ### Audio Components
-- `AudioUploadTabs.tsx` - Upload híbrido de áudio com sistema dual (server/client)
+- `AudioUploadTabs.tsx` - Upload híbrido de áudio (refatorado e modular)
+  - `hooks/useAudioUpload.ts` - Lógica de upload e validação
+  - `hooks/useCoverExtraction.ts` - Extração de covers de MP3
+  - `AudioUploadForm.tsx` - Interface de upload
+  - `CoverExtractionDialog.tsx` - Dialog para covers extraídas
 - `MiniPlayer.tsx` - Player de áudio compacto
 
 ### Cover Components  
@@ -44,7 +48,11 @@
 - `InlineCoverEditor.tsx` - Editor inline para colunas (sem modal)
 
 ### Board Components
-- `Board.tsx` - Container principal do quadro
+- `Board.tsx` - Container principal do quadro (refatorado e modular)
+  - `hooks/useBoardState.ts` - Estado, mutations e handlers do board
+  - `hooks/useDragAndDrop.ts` - Lógica completa de drag & drop
+  - `BoardToolbar.tsx` - Barra de título e ações do board
+  - `BoardGrid.tsx` - Grid de colunas e botão "Add Column"
 - `Column.tsx` - Componente de coluna com drag & drop
 - `Card.tsx` - Componente de card com drag & drop e preview de tags
 - `CardDetailSheet.tsx` - Modal de edição de cards com campo AI Notes
@@ -307,11 +315,14 @@ vercel env ls
 ---
 
 **Última atualização**: 2025-08-18  
-**Versão**: 2.2.0 - Code Cleanup & Organization  
+**Versão**: 3.0.0 - Major Refactoring & Architecture Improvement  
 **Status**: 
 - ✅ Sistema de upload híbrido estável e funcionando
 - ✅ Cover extraction corrigido 
 - ✅ Código duplicado removido (API /lp-music-caps, AudioUpload.tsx obsoleto)
 - ✅ Documentação consolidada (removidos 4 arquivos MD redundantes)
+- ✅ **REFATORAÇÃO COMPLETA**: Board.tsx (560→120 linhas) e AudioUploadTabs.tsx (457→67 linhas)
+- ✅ **ARQUITETURA MODULAR**: 11 novos hooks/componentes para separação de responsabilidades
+- ✅ **MANUTENIBILIDADE**: Código organizado, testável e extensível
 - ❌ AI de música indisponível (modelo não deployado na HF)
 - 🎯 Próximo foco: encontrar API alternativa para análise musical
