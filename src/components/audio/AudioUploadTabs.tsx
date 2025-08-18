@@ -70,7 +70,6 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
           const blob = await upload(file.name, file, {
             access: 'public',
             handleUploadUrl: '/api/upload/audio-presigned',
-            addRandomSuffix: true,
           });
           
           uploadedUrl = blob.url;
@@ -106,7 +105,7 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
               console.log('AI analysis failed for large file, but upload succeeded');
             }
           } catch (aiError) {
-            console.log('AI analysis timed out for large file, but upload succeeded');
+            console.log('AI analysis timed out for large file, but upload succeeded:', aiError);
           }
           
         } catch (clientUploadError) {
