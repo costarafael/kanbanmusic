@@ -70,6 +70,7 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
           const blob = await upload(file.name, file, {
             access: 'public',
             handleUploadUrl: '/api/upload/audio-presigned',
+            addRandomSuffix: true,
           });
           
           uploadedUrl = blob.url;
