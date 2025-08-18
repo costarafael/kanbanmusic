@@ -249,7 +249,7 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
                   onCoverUrlChange={handleCoverUrlChange}
                 />
                 {audioUrl && (
-                  <div className="mt-4 p-3 bg-white rounded-md border border-slate-200">
+                  <div className="mt-4">
                     <MiniPlayer audioUrl={audioUrl} cardId={card.id} />
                   </div>
                 )}

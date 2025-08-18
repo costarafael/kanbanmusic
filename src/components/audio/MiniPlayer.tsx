@@ -96,12 +96,12 @@ export function MiniPlayer({ audioUrl, cardId }: MiniPlayerProps) {
   };
 
   return (
-    <div className="bg-slate-700 p-3 rounded-lg border border-slate-600 space-y-3">
+    <div className="bg-slate-700 p-3 rounded-lg space-y-3">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
       {/* Progress bar - Always visible at top */}
       <div 
-        className="w-full bg-slate-600 rounded-full h-2 cursor-pointer hover:h-3 transition-all duration-200 group"
+        className="w-full bg-slate-600 rounded-full h-2 cursor-pointer"
         onClick={handleProgressClick}
       >
         <div
