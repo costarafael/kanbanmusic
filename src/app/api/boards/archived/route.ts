@@ -11,6 +11,7 @@ export async function GET() {
 
     return NextResponse.json({ columns, cards });
   } catch (error) {
+    console.error('Failed to fetch archived items:', error);
     return NextResponse.json({ error: 'Failed to fetch archived items' }, { status: 500 });
   }
 }

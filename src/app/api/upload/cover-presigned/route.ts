@@ -38,6 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           // Here you could store the blob URL in your database
           // await db.update({ coverUrl: blob.url });
         } catch (error) {
+          console.error("Error:", error);
           throw new Error('Could not update database');
         }
       },
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  
     return NextResponse.json(jsonResponse);
   } catch (error) {
+          console.error("Error:", error);
     console.error('Cover presigned URL error:', error);
     return NextResponse.json(
       { error: 'Failed to generate presigned URL' },

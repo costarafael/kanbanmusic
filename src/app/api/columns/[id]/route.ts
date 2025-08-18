@@ -67,6 +67,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Column deleted successfully' });
   } catch (error) {
+    console.error("Error:", error);
     return NextResponse.json({ error: 'Failed to delete column' }, { status: 500 });
   }
 }

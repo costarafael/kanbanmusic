@@ -298,6 +298,7 @@ export async function POST(request: NextRequest) {
  * Generate insights from the music caption
  */
 function generateMusicInsights(caption: string, _metadata: any) {
+  // Future: Could use metadata for enhanced insights
   if (!caption || caption.includes('No caption') || caption.includes('Unable to generate')) {
     return {
       genre: 'unknown',

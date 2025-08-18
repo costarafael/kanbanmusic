@@ -36,9 +36,6 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       // TODO: Fix Vercel project authentication settings to allow public presigned URLs
       console.log('Using server upload (auth protection prevents client upload)...');
       
-      let uploadedUrl: string;
-      let musicAiNotes: string | undefined;
-      
       const formData = new FormData();
       formData.append('audio', file);
       
@@ -55,8 +52,8 @@ export function AudioUploadTabs({ currentUrl, onAudioUrlChange, currentCoverUrl,
       }
       
       const result = await response.json();
-      uploadedUrl = result.url;
-      musicAiNotes = result.music_ai_notes;
+      const uploadedUrl = result.url;
+      const musicAiNotes = result.music_ai_notes;
       
       console.log('Server upload successful:', result);
       
