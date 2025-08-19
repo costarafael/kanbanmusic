@@ -12,6 +12,12 @@ const cardSchema = new Schema({
   tags: [{ type: String, trim: true }], // Array de tags
   showDescriptionInPreview: { type: Boolean, default: false }, // Mostrar descrição no preview
   showTagsInPreview: { type: Boolean, default: true }, // Mostrar tags no preview (default ativo)
+  // Playlist fields
+  isPlaylist: { type: Boolean, default: false }, // Se é um card de playlist
+  playlistItems: [{ 
+    cardId: { type: String, required: true }, // ID do card referenciado
+    order: { type: Number, required: true }, // Ordem na playlist
+  }], // Array de items da playlist
   order: { type: Number, required: true },
   columnId: { type: String, required: true },
   status: { type: String, enum: ['active', 'archived'], default: 'active' },

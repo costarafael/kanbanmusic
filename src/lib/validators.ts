@@ -40,6 +40,12 @@ export const updateCardSchema = z.object({
   tags: z.array(z.string().trim().min(1)).optional(),
   showDescriptionInPreview: z.boolean().optional(),
   showTagsInPreview: z.boolean().optional(),
+  // Playlist fields
+  isPlaylist: z.boolean().optional(),
+  playlistItems: z.array(z.object({
+    cardId: z.string().min(1),
+    order: z.number().int().min(0),
+  })).optional(),
   order: z.number().int().min(0).optional(),
   columnId: z.string().optional(),
   status: z.enum(['active', 'archived']).optional(),

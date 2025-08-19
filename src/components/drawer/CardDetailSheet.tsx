@@ -10,6 +10,7 @@ import {
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { AudioUploadTabs } from "@/components/audio/AudioUploadTabs";
 import { MiniPlayer } from "@/components/audio/MiniPlayer";
+import { PlaylistPlayer } from "@/components/audio/PlaylistPlayer";
 import { CoverUploadCompact } from "@/components/cover/CoverUploadCompact";
 import { StarRating } from "@/components/ui/star-rating";
 import { Switch } from "@/components/ui/switch";
@@ -50,6 +51,8 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSh
   const [showDescriptionInPreview, setShowDescriptionInPreview] = useState(card?.showDescriptionInPreview || false);
   const [showTagsInPreview, setShowTagsInPreview] = useState(card?.showTagsInPreview !== false); // Default true
   const [musicAiNotes, setMusicAiNotes] = useState(card?.music_ai_notes || "");
+  const [isPlaylist, setIsPlaylist] = useState(card?.isPlaylist || false);
+  const [playlistItems, setPlaylistItems] = useState(card?.playlistItems || []);
   const queryClient = useQueryClient();
 
   // Fetch board tags for autocomplete
@@ -85,6 +88,8 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSh
       setShowDescriptionInPreview(card.showDescriptionInPreview || false);
       setShowTagsInPreview(card.showTagsInPreview !== false);
       setMusicAiNotes(card.music_ai_notes || "");
+      setIsPlaylist(card.isPlaylist || false);
+      setPlaylistItems(card.playlistItems || []);
     }
   }, [card]);
 
@@ -169,6 +174,16 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSh
     }
   };
 
+  const handlePlaylistChange = (newIsPlaylist: boolean) => {
+    setIsPlaylist(newIsPlaylist);
+    updateCardMutation({ id: card.id, isPlaylist: newIsPlaylist });
+  };
+
+  const handlePlaylistItemsChange = (items: any[]) => {
+    setPlaylistItems(items);
+    updateCardMutation({ id: card.id, playlistItems: items });
+  };
+
   const handleArchiveCard = () => {
     updateCardMutation({ id: card.id, status: "archived" });
     onClose();
@@ -250,12 +265,21 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSh
                   onAudioUrlChange={handleAudioUrlChange}
                   currentCoverUrl={coverUrl}
                   onCoverUrlChange={handleCoverUrlChange}
+                  isPlaylist={isPlaylist}
+                  playlistItems={playlistItems}
+                  onPlaylistChange={handlePlaylistChange}
+                  onPlaylistItemsChange={handlePlaylistItemsChange}
+                  boardId={boardId}
                 />
-                {audioUrl && (
+                {isPlaylist && playlistItems.length > 0 ? (
+                  <div className="mt-4">
+                    <PlaylistPlayer playlistItems={playlistItems} cardId={card.id} />
+                  </div>
+                ) : audioUrl && !isPlaylist ? (
                   <div className="mt-4">
                     <MiniPlayer audioUrl={audioUrl} cardId={card.id} />
                   </div>
-                )}
+                ) : null}
               </div>
 
               {/* Tags Section */}
