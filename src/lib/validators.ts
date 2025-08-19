@@ -25,6 +25,9 @@ export const updateColumnSchema = z.object({
 // Card validators
 export const createCardSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  audioUrl: z.string().refine(isValidAudioUrl, 'Invalid audio URL or path').optional().or(z.literal('')),
+  coverUrl: z.string().refine(isValidUrl, 'Invalid cover URL or path').optional().or(z.literal('')),
+  music_ai_notes: z.string().optional(),
 });
 
 export const updateCardSchema = z.object({

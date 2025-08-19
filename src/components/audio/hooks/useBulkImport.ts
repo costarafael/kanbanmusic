@@ -97,6 +97,7 @@ export function useBulkImport() {
           ...(coverUrl && { coverUrl })
         };
 
+        console.log('Creating card with data:', cardData);
         const newCard = await createCard(columnId, cardData);
 
         updateFileStatus(fileStatus.id, { 
@@ -178,15 +179,23 @@ async function extractCoverArt(file: File): Promise<string | undefined> {
 }
 
 async function createCard(columnId: string, cardData: { title: string; audioUrl: string; coverUrl?: string }) {
+  console.log('Sending to API:', { columnId, cardData });
+  
   const response = await fetch(`/api/columns/${columnId}/cards`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(cardData),
   });
   
+  console.log('API Response status:', response.status);
+  
   if (!response.ok) {
-    throw new Error(`Failed to create card: ${response.statusText}`);
+    const errorText = await response.text();
+    console.error('API Error:', errorText);
+    throw new Error(`Failed to create card: ${response.status} ${response.statusText}`);
   }
   
-  return response.json();
+  const result = await response.json();
+  console.log('Created card:', result);
+  return result;
 }
