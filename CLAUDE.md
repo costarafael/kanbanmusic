@@ -35,6 +35,8 @@
 - **Cover Image Hover** - Botões "Change" e "Remove" aparecem apenas no hover
 - **Audio Player Dark** - Player redesenhado com tema escuro e ícones filled
 - **Timeline Sempre Visível** - Progress bar clicável mesmo antes do play
+- **Players Independentes** - CompactPlayer e MiniPlayer nunca conflitam
+- **Layout Super Compacto** - CompactPlayer otimizado para mínimo espaço vertical
 
 ## 🗂️ Arquitetura de Componentes
 
@@ -42,9 +44,13 @@
 - `AudioUploadTabs.tsx` - Upload híbrido de áudio (refatorado e modular)
   - `hooks/useAudioUpload.ts` - Lógica de upload e validação
   - `hooks/useCoverExtraction.ts` - Extração de covers de MP3
+  - `hooks/useBulkImport.ts` - Lógica de importação em massa
   - `AudioUploadForm.tsx` - Interface de upload
   - `CoverExtractionDialog.tsx` - Dialog para covers extraídas
-- `MiniPlayer.tsx` - Player de áudio compacto
+  - `BulkImportDialog.tsx` - Dialog para importação em massa
+  - `FileList.tsx` - Lista de arquivos com progress tracking
+- `MiniPlayer.tsx` - Player completo para detalhes do card (playerId: 'detail')
+- `CompactPlayer.tsx` - Player super compacto para preview do card (playerId: 'compact')
 
 ### Cover Components  
 - `CoverUploadTabs.tsx` - Upload de cover com tabs (File/URL)
@@ -77,7 +83,7 @@
 
 - **Framework**: Next.js 15.4.6 com React 19
 - **Styling**: Tailwind CSS + Radix UI components
-- **State Management**: TanStack Query v5
+- **State Management**: TanStack Query v5 + Zustand (audio)
 - **Database**: MongoDB com Mongoose
 - **File Storage**: Vercel Blob
 - **Drag & Drop**: @dnd-kit
@@ -207,12 +213,22 @@ src/
 - Exibição condicional (só aparece se houver análise)
 - Formatação automática com emoji e estrutura
 
-### ✅ Melhorias de UX (2025-08-18)
+### ✅ Melhorias de UX (2025-08-19)
 - **Cover Image Hover**: Botões "Change" e "Remove" aparecem apenas no hover sobre a imagem
 - **Estado sem Cover**: Botão ghost "Add Cover" em vez de "Choose Cover"
 - **Audio Player Dark Theme**: Redesenhado com background `slate-700` e ícones filled
 - **Timeline Interativa**: Progress bar sempre visível e clicável, mesmo antes do play
 - **Dialog Overlay Sutil**: Reduzida opacidade de 80% para 20% para melhor UX
+- **Players Independentes**: Eliminado conflito entre CompactPlayer e MiniPlayer
+- **Layout Super Compacto**: CompactPlayer otimizado para mínimo espaço vertical
+
+### ✅ Sistema de Áudio Avançado (2025-08-19)
+- **Bulk Import**: Importação em massa de arquivos de áudio via menu da coluna
+- **Players Únicos**: Zustand store garante apenas um player ativo por vez
+- **CompactPlayer**: Layout horizontal ultra-compacto (controles + timeline + tempo)
+- **MiniPlayer**: Player completo para detalhes do card com tema escuro
+- **Extração Automática**: Cover art de MP3s extraída automaticamente no bulk import
+- **Progress Tracking**: Feedback visual detalhado durante importação em massa
 
 ## 🎵 Status Atual da Integração AI
 
@@ -323,16 +339,20 @@ vercel env ls
 ---
 
 **Última atualização**: 2025-08-19  
-**Versão**: 3.1.0 - Unified Upload System & UI Polish  
+**Versão**: 3.2.0 - Advanced Audio System & Player Optimization  
 **Status**: 
 - ✅ Sistema de upload unificado (client-only) - elimina erro 413
-- ✅ Cover extraction corrigido 
+- ✅ **BULK IMPORT** - Importação em massa de arquivos de áudio implementada
+- ✅ **PLAYERS INDEPENDENTES** - Eliminado conflito entre CompactPlayer e MiniPlayer
+- ✅ **LAYOUT SUPER COMPACTO** - CompactPlayer otimizado para mínimo espaço vertical
+- ✅ **ARQUIVAMENTO CORRIGIDO** - Fix do freeze ao arquivar cards (query keys)
+- ✅ Cover extraction corrigido e integrado ao bulk import
 - ✅ Audio player design aprimorado (sem bordas, tema escuro consistente)
 - ✅ UI/UX melhoradas (hover interactions, timelines sempre visíveis)
 - ✅ Código duplicado removido (API /lp-music-caps, AudioUpload.tsx obsoleto)
-- ✅ Documentação consolidada (removidos 4 arquivos MD redundantes)
 - ✅ **REFATORAÇÃO COMPLETA**: Board.tsx (560→120 linhas) e AudioUploadTabs.tsx (457→67 linhas)
-- ✅ **ARQUITETURA MODULAR**: 11 novos hooks/componentes para separação de responsabilidades
+- ✅ **ARQUITETURA MODULAR**: 14 novos hooks/componentes para separação de responsabilidades
+- ✅ **ZUSTAND INTEGRATION**: Store centralizado para controle de áudio
 - ✅ **MANUTENIBILIDADE**: Código organizado, testável e extensível
 - ❌ AI de música indisponível (modelo não deployado na HF)
 - 🎯 Próximo foco: encontrar API alternativa para análise musical
