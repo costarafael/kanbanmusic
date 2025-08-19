@@ -58,12 +58,20 @@ export function TagsInput({
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
+      if (e.key === "," && activeSuggestionIndex >= 0) {
+        // Don't add comma if we're selecting from suggestions
+        return;
+      }
       if (activeSuggestionIndex >= 0 && filteredSuggestions[activeSuggestionIndex]) {
         addTag(filteredSuggestions[activeSuggestionIndex]);
       } else if (inputValue.trim()) {
-        addTag(inputValue);
+        // Remove comma from the input value if it was typed
+        const cleanValue = inputValue.replace(/,+$/, '').trim();
+        if (cleanValue) {
+          addTag(cleanValue);
+        }
       }
     } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
       removeTag(tags.length - 1);
@@ -84,6 +92,26 @@ export function TagsInput({
   const handleSuggestionClick = (suggestion: string) => {
     addTag(suggestion);
     inputRef.current?.focus();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Check if the input contains comma and process it
+    if (value.includes(',')) {
+      const parts = value.split(',');
+      const tagsToAdd = parts.slice(0, -1).map(tag => tag.trim()).filter(tag => tag && !tags.includes(tag));
+      
+      // Add all complete tags (before the last comma)
+      if (tagsToAdd.length > 0) {
+        onTagsChange([...tags, ...tagsToAdd]);
+      }
+      
+      // Keep the part after the last comma as the new input value
+      setInputValue(parts[parts.length - 1]);
+    } else {
+      setInputValue(value);
+    }
   };
 
   return (
@@ -108,7 +136,7 @@ export function TagsInput({
         <Input
           ref={inputRef}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleInputKeyDown}
           onFocus={() => setShowSuggestions(filteredSuggestions.length > 0)}
           placeholder={tags.length === 0 ? placeholder : ""}

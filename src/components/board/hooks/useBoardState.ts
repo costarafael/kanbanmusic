@@ -94,12 +94,16 @@ export function useBoardState(boardId: string) {
   
   const queryClient = useQueryClient();
   
-  // Data fetching
+  // Data fetching with real-time polling
   const { data, isLoading, error } = useQuery({
     queryKey: ["board", boardId],
     queryFn: () => fetchBoardData(boardId),
     retry: 2,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 30, // 30 seconds - reduced for more frequent updates
+    refetchInterval: 1000 * 60 * 2, // Poll every 2 minutes for changes
+    refetchIntervalInBackground: true, // Continue polling when tab is not active
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnReconnect: true, // Refetch when internet connection is restored
   });
 
   // Card mutation with optimistic updates

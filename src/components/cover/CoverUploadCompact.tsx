@@ -17,22 +17,30 @@ export function CoverUploadCompact({ currentUrl, onCoverUrlChange, aspectRatio =
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      // Use Vercel Blob client upload for large files
-      const { upload } = await import('@vercel/blob/client');
+      console.log('Processing and uploading cover image...');
       
-      console.log('Uploading cover via Vercel Blob...');
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/upload/cover-presigned',
+      // Use the processed upload endpoint that converts to JPG and resizes
+      const formData = new FormData();
+      formData.append('cover', file);
+      
+      const response = await fetch('/api/upload/cover-processed', {
+        method: 'POST',
+        body: formData,
       });
       
-      console.log('Cover upload successful:', blob);
-      const uploadedUrl = blob.url;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
       
-      onCoverUrlChange(uploadedUrl);
+      const result = await response.json();
+      console.log('Cover upload successful:', result);
+      
+      onCoverUrlChange(result.url);
     } catch (error) {
       console.error('Error uploading cover:', error);
-      alert('Failed to upload cover image');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload cover image';
+      alert(`Upload failed: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
