@@ -192,6 +192,39 @@ src/
 
 ## 🚀 Funcionalidades Recentemente Implementadas
 
+### ✅ Sistema de Playlists Completo (2025-08-19)
+- **Toggle switch** para alternar entre modo áudio único e playlist
+- **Busca e adição** de cards existentes para formar playlists
+- **Drag & drop reordering** para reorganizar items da playlist
+- **Player simplificado** com play/pause/stop e tempo total (sem timeline)
+- **Suporte para cards sem áudio** em playlists organizacionais
+- **Preview no card** mostra primeiros 3 items + "+X outros"
+- **População automática** de dados (título, audioUrl) via API
+- **Gradiente animado** nos players quando tocando música
+
+### ✅ Processamento Avançado de Imagens (2025-08-19) 
+- **API de processamento** `/api/upload/cover-processed` com Sharp
+- **Conversão automática** para JPEG (85% qualidade)
+- **Redimensionamento proporcional** para largura máxima 600px
+- **Otimização de tamanho** para melhor performance
+- **Integração completa** em todos os componentes de cover
+- **Upload server-side** antes do Vercel Blob storage
+
+### ✅ UX Melhorada para Tags (2025-08-19)
+- **Vírgula como separador** além do Enter para criar tags
+- **Múltiplas tags simultâneas** (ex: "rock, indie, 80s" → 3 tags)
+- **Processamento inteligente** remove vírgulas extras e espaços
+- **Compatibilidade total** com autocomplete e sugestões existentes
+- **Parsing automático** durante digitação
+
+### ✅ Colaboração em Tempo Real - Base (2025-08-19)
+- **Polling inteligente** atualiza board a cada 2 minutos automaticamente
+- **Background polling** continua funcionando em abas inativas  
+- **Reconexão automática** ao retornar para a tab
+- **Network-aware** recarrega quando conexão é restaurada
+- **Arquitetura SSE preparada** para migração futura instantânea
+- **Sistema de eventos** preparado para broadcast real-time
+
 ### ✅ Upload de Áudio Reformulado (2025-08-19)
 - Sistema unificado client upload para todos os tamanhos de arquivo
 - Eliminação do erro 413 (Payload Too Large) ao remover server upload
@@ -295,6 +328,80 @@ HUGGINGFACE_API_TOKEN=production_hf_token
 }
 ```
 
+## 🔄 Real-time Collaboration - ROADMAP
+
+### **Atual: Polling Inteligente (Implementado)**
+```typescript
+// useBoardState.ts - Configuração atual
+refetchInterval: 1000 * 60 * 2,          // Poll a cada 2 minutos
+refetchIntervalInBackground: true,        // Continua em background
+refetchOnWindowFocus: true,              // Atualiza ao voltar à tab
+refetchOnReconnect: true,                // Reconecta automaticamente
+```
+
+**Status**: ✅ **FUNCIONAL** - Colaboração com latência de 0-120 segundos
+
+### **Futuro: Server-Sent Events (Preparado)**
+
+**Arquitetura SSE já criada**:
+```
+src/
+├── app/api/boards/[id]/events/route.ts      # SSE endpoint (base pronta)
+├── lib/hooks/useBoardEvents.ts              # Hook para eventos (pronto)
+├── lib/utils/board-events.ts                # Sistema de eventos (pronto)
+└── components/board/hooks/useBoardState.ts  # Polling atual (funcional)
+```
+
+**Migração SSE - Passos definidos**:
+1. **Ativar SSE endpoint** - Ajustar streaming de eventos
+2. **Integrar emissores** - Adicionar em 8 APIs de mutação
+3. **Substituir polling** - Remover refetchInterval
+4. **Teste colaborativo** - 2+ usuários simultâneos
+
+**Eventos preparados**:
+- `card-created` | `card-updated` | `card-moved` | `card-deleted`
+- `column-created` | `column-updated` | `column-deleted`  
+- `board-updated`
+- `playlist-updated`
+
+**Fluxo de funcionamento**:
+```typescript
+// 1. Usuário A move card
+emitCardEvent(boardId, cardId, 'moved', { fromColumn, toColumn })
+
+// 2. SSE broadcasteado para todos
+GET /api/boards/[boardId]/events
+-> event: update
+-> data: { type: 'card-moved', cardId: 'abc', ... }
+
+// 3. Hook detecta mudança
+const { lastEvent } = useBoardEvents(boardId)
+-> queryClient.invalidateQueries(['board', boardId])
+
+// 4. UI atualiza instantaneamente
+```
+
+### **Avançado: WebSockets (Planejado)**
+
+**Para funcionalidades futuras**:
+- Collaborative cursors (cursores de outros usuários)
+- Presence indicators (quem está online)
+- Chat em tempo real
+- Edição simultânea de texto
+- Conflict resolution
+
+**Estimativa de implementação**:
+- **SSE**: 1-2 dias (base já criada)
+- **WebSockets**: 1 semana (implementação completa)
+- **Collaborative features**: 2-3 semanas
+
+**Comparação de latência**:
+| Método | Latência | Tráfego | Complexidade |
+|--------|----------|---------|--------------|
+| Polling atual | 0-120s | Alto | ⭐ Simples |
+| SSE futuro | <1s | Baixo | ⭐⭐ Médio |
+| WebSocket avançado | <100ms | Mínimo | ⭐⭐⭐ Alto |
+
 ## 📝 Notas de Desenvolvimento
 
 1. **Upload Strategy** - Sistema híbrido baseado no tamanho do arquivo
@@ -303,6 +410,7 @@ HUGGINGFACE_API_TOKEN=production_hf_token
 4. **TypeScript** - Tipagem rigorosa em todos os componentes
 5. **Accessibility** - Componentes seguem padrões de acessibilidade
 6. **Error Handling** - Logs detalhados para debugging em produção
+7. **Real-time Ready** - Arquitetura preparada para evolução gradual
 
 ## 🐛 Debug Tips
 
@@ -339,20 +447,23 @@ vercel env ls
 ---
 
 **Última atualização**: 2025-08-19  
-**Versão**: 3.2.0 - Advanced Audio System & Player Optimization  
+**Versão**: 4.0.0 - Enterprise Collaboration & Content Optimization  
 **Status**: 
-- ✅ Sistema de upload unificado (client-only) - elimina erro 413
-- ✅ **BULK IMPORT** - Importação em massa de arquivos de áudio implementada
+- ✅ **SISTEMA PLAYLIST COMPLETO** - Cards de playlist com busca, reordenação e player simplificado
+- ✅ **PROCESSAMENTO DE IMAGENS** - Conversão automática para JPG e redimensionamento para 600px
+- ✅ **TAGS APRIMORADAS** - Vírgula como separador para UX mais intuitiva
+- ✅ **COLABORAÇÃO TEMPO REAL** - Polling inteligente com updates automáticos (2min)
+- ✅ **ARQUITETURA SSE PREPARADA** - Base completa para tempo real instantâneo (<1s)
+- ✅ **GRADIENTE ANIMADO** - Players com visual dinâmico quando tocando
+- ✅ **PREVIEW DE PLAYLISTS** - Cards mostram primeiros 3 items + contador
+- ✅ **POPULAÇÃO DE DADOS** - API popula automaticamente títulos e audioUrls das playlists
 - ✅ **PLAYERS INDEPENDENTES** - Eliminado conflito entre CompactPlayer e MiniPlayer
+- ✅ **BULK IMPORT** - Importação em massa de arquivos de áudio
 - ✅ **LAYOUT SUPER COMPACTO** - CompactPlayer otimizado para mínimo espaço vertical
-- ✅ **ARQUIVAMENTO CORRIGIDO** - Fix do freeze ao arquivar cards (query keys)
-- ✅ Cover extraction corrigido e integrado ao bulk import
-- ✅ Audio player design aprimorado (sem bordas, tema escuro consistente)
-- ✅ UI/UX melhoradas (hover interactions, timelines sempre visíveis)
-- ✅ Código duplicado removido (API /lp-music-caps, AudioUpload.tsx obsoleto)
-- ✅ **REFATORAÇÃO COMPLETA**: Board.tsx (560→120 linhas) e AudioUploadTabs.tsx (457→67 linhas)
-- ✅ **ARQUITETURA MODULAR**: 14 novos hooks/componentes para separação de responsabilidades
-- ✅ **ZUSTAND INTEGRATION**: Store centralizado para controle de áudio
-- ✅ **MANUTENIBILIDADE**: Código organizado, testável e extensível
+- ✅ **ARQUIVAMENTO CORRIGIDO** - Fix do freeze ao arquivar cards
+- ✅ **REFATORAÇÃO COMPLETA** - Código modular, hooks organizados, zustand integrado
 - ❌ AI de música indisponível (modelo não deployado na HF)
-- 🎯 Próximo foco: encontrar API alternativa para análise musical
+- 🔄 **PRÓXIMOS PASSOS**:
+  - Real-time SSE (1-2 dias de implementação)
+  - WebSocket collaboration (1 semana)
+  - Presence indicators & collaborative cursors (2-3 semanas)
