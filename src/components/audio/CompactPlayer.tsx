@@ -95,7 +95,11 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
   };
 
   return (
-    <div className="bg-slate-700 p-2 rounded-lg">
+    <div className={`p-2 rounded-lg relative overflow-hidden ${
+      isPlaying 
+        ? 'bg-gradient-to-r from-purple-900/80 via-blue-800/80 to-pink-800/80 animate-gradient-x' 
+        : 'bg-slate-700'
+    }`}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
       {/* Progress bar with controls inline */}

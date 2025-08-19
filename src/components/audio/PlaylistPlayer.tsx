@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Music, Play, Pause, Square, SkipForward, SkipBack } from "lucide-react";
+import { useAudioStore } from "@/lib/store/useAudioStore";
 
 interface PlaylistItem {
   cardId: string;
@@ -24,6 +25,10 @@ export function PlaylistPlayer({ playlistItems, cardId }: PlaylistPlayerProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const { playing, actions } = useAudioStore();
+  const playerId = 'playlist';
+  const isThisPlayerPlaying = playing?.cardId === cardId && playing?.playerId === playerId;
 
   const currentTrack = playlistItems[currentTrackIndex];
   const hasAudio = currentTrack?.audioUrl;
@@ -78,16 +83,36 @@ export function PlaylistPlayer({ playlistItems, cardId }: PlaylistPlayerProps) {
 
   const handlePlay = () => {
     if (!hasAudio) return;
-    setIsPlaying(!isPlaying);
+    
+    if (isPlaying) {
+      setIsPlaying(false);
+      actions.pause();
+    } else {
+      // Stop any other playing audio
+      actions.stop();
+      setIsPlaying(true);
+      actions.play(cardId, playerId);
+    }
   };
 
   const handleStop = () => {
     setIsPlaying(false);
     setCurrentTime(0);
+    actions.stop();
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
     }
   };
+
+  // Stop this player if another one starts playing
+  useEffect(() => {
+    if (playing && !isThisPlayerPlaying && isPlaying) {
+      setIsPlaying(false);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    }
+  }, [playing, isThisPlayerPlaying, isPlaying]);
 
   const handlePrevious = () => {
     if (currentTrackIndex > 0) {
@@ -114,7 +139,11 @@ export function PlaylistPlayer({ playlistItems, cardId }: PlaylistPlayerProps) {
   }
 
   return (
-    <div className="bg-slate-700 p-3 rounded-lg space-y-3">
+    <div className={`p-3 rounded-lg space-y-3 relative overflow-hidden ${
+      isThisPlayerPlaying && isPlaying 
+        ? 'bg-gradient-to-r from-purple-900/80 via-blue-800/80 to-pink-800/80 animate-gradient-x' 
+        : 'bg-slate-700'
+    }`}>
       {hasAudio && (
         <audio ref={audioRef} src={currentTrack.audioUrl} preload="metadata" />
       )}

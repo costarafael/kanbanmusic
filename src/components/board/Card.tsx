@@ -8,6 +8,7 @@ import { Card as ShadCard, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { extractPlainText, truncateToLines } from "@/lib/utils/description-helpers";
+import { Music } from "lucide-react";
 
 interface CardProps {
   card: any;
@@ -82,8 +83,39 @@ export function Card({ card, onCardClick }: CardProps) {
               <CardTitle className="text-sm flex-1">{card.title}</CardTitle>
             </div>
             
-            {/* Tags preview - show by default if tags exist and not explicitly disabled */}
-            {card.showTagsInPreview !== false && card.tags && card.tags.length > 0 && (
+            {/* Playlist preview - show first 3 playlist items if in playlist mode */}
+            {card.isPlaylist && card.playlistItems && card.playlistItems.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-slate-500 mb-2 flex items-center gap-1">
+                  <Music className="h-3 w-3" />
+                  Playlist ({card.playlistItems.length} tracks)
+                </div>
+                <div className="space-y-1">
+                  {card.playlistItems.slice(0, 3).map((item: any, index: number) => (
+                    <div key={`${item.cardId}-${index}`} className="flex items-center gap-2 text-xs">
+                      <span className="w-4 text-center text-slate-400">{index + 1}</span>
+                      <span className="flex-1 truncate text-slate-600">
+                        {item.title || `Track ${index + 1}`}
+                      </span>
+                      {!item.audioUrl && (
+                        <Badge variant="outline" className="text-xs border-slate-300 text-slate-400 px-1 py-0">
+                          No audio
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                  {card.playlistItems.length > 3 && (
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <span className="w-4 text-center">⋯</span>
+                      <span className="flex-1">+{card.playlistItems.length - 3} outros</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Tags preview - show by default if tags exist and not explicitly disabled, but not for playlist cards */}
+            {!card.isPlaylist && card.showTagsInPreview !== false && card.tags && card.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {card.tags.slice(0, 3).map((tag: string, index: number) => (
                   <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
@@ -114,8 +146,8 @@ export function Card({ card, onCardClick }: CardProps) {
           </CardHeader>
         </div>
         
-        {/* Audio player - separate from clickable area to prevent conflicts */}
-        {card.audioUrl && (
+        {/* Audio player - separate from clickable area to prevent conflicts, not shown for playlist cards */}
+        {card.audioUrl && !card.isPlaylist && (
           <div className="p-0 m-0" onClick={(e) => e.stopPropagation()}>
             <CompactPlayer audioUrl={card.audioUrl} cardId={card.id} />
           </div>

@@ -96,7 +96,11 @@ export function MiniPlayer({ audioUrl, cardId }: MiniPlayerProps) {
   };
 
   return (
-    <div className="bg-slate-700 p-3 rounded-lg space-y-3">
+    <div className={`p-3 rounded-lg space-y-3 relative overflow-hidden ${
+      isPlaying 
+        ? 'bg-gradient-to-r from-purple-900/80 via-blue-800/80 to-pink-800/80 animate-gradient-x' 
+        : 'bg-slate-700'
+    }`}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
       {/* Progress bar - Always visible at top */}
