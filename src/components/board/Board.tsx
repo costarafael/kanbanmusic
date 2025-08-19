@@ -96,7 +96,7 @@ export function Board({ boardId }: BoardProps) {
       }}>
         {dragAndDrop.activeItem?.type === "Card" && dragAndDrop.activeItem.card && (
           <div className="transform rotate-6 shadow-2xl opacity-95">
-            <Card card={dragAndDrop.activeItem.card} onCardClick={boardState.handleOpenCard} />
+            <Card card={dragAndDrop.activeItem.card} onCardClick={boardState.handleOpenCard} allCards={boardState.cards} />
           </div>
         )}
         {dragAndDrop.activeItem?.type === "Column" && dragAndDrop.activeItem.column && (
@@ -106,6 +106,7 @@ export function Board({ boardId }: BoardProps) {
               cards={boardState.cards.filter((card: any) => card.columnId === dragAndDrop.activeItem.column.id)}
               onCardCreated={boardState.handleOpenCard}
               onCardClick={boardState.handleOpenCard}
+              allCards={boardState.cards}
             />
           </div>
         )}

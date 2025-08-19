@@ -54,6 +54,7 @@ export function BoardGrid({
             cards={cards.filter((card: any) => card.columnId === column.id)}
             onCardCreated={onCardCreated}
             onCardClick={onCardClick}
+            allCards={cards}
           />
         ))}
         

@@ -25,6 +25,7 @@ interface ColumnProps {
   cards: any[];
   onCardCreated?: (cardId: string) => void;
   onCardClick?: (cardId: string) => void;
+  allCards?: any[]; // Todos os cards do board para calcular playlists
 }
 
 async function createCard(newCard: { title: string; columnId: string }) {
@@ -51,7 +52,7 @@ async function updateColumn(columnData: { id: string; title?: string; status?: s
   return res.json();
 }
 
-export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProps) {
+export function Column({ column, cards, onCardCreated, onCardClick, allCards = [] }: ColumnProps) {
   const [newCardTitle, setNewCardTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(column.title);
@@ -298,7 +299,7 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
         >
           {cards.length > 0 ? (
             <>
-              {cards.map((card) => <Card key={card.id} card={card} onCardClick={onCardClick} />)}
+              {cards.map((card) => <Card key={card.id} card={card} onCardClick={onCardClick} allCards={allCards} />)}
               
               {/* Add Card Button at the end */}
               <Button

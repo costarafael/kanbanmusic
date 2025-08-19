@@ -95,29 +95,30 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
   };
 
   return (
-    <div className={`p-2 rounded-lg relative overflow-hidden ${
+    <div className={`relative overflow-hidden ${
       isPlaying 
         ? 'bg-gradient-to-r from-purple-900/80 via-blue-800/80 to-pink-800/80 animate-gradient-x' 
         : 'bg-slate-700'
-    }`}>
+    }`} style={{ borderRadius: '0 0 8px 8px' }}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
-      {/* Progress bar with controls inline */}
-      <div className="flex items-center gap-2 mb-1">
+      {/* Horizontal layout with controls, timeline and time */}
+      <div className="flex items-center gap-2 p-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePlay}
-          className="h-6 w-6 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600 flex-shrink-0"
+          className="h-6 w-6 p-0 flex items-center justify-center text-slate-100 hover:text-white rounded-md flex-shrink-0"
+          style={{ backgroundColor: isPlaying ? 'rgba(255, 255, 255, 0.1)' : 'transparent' }}
         >
           {isPlaying ? (
             // Filled Pause Icon
-            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
             </svg>
           ) : (
-            // Filled Play Icon
-            <svg className="h-3 w-3 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+            // Filled Play Icon  
+            <svg className="h-4 w-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
           )}
@@ -127,10 +128,11 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
           variant="ghost"
           size="sm"
           onClick={handleStop}
-          className="h-6 w-6 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600 flex-shrink-0"
+          className="h-6 w-6 p-0 flex items-center justify-center text-slate-100 hover:text-white rounded-md flex-shrink-0"
+          style={{ backgroundColor: 'transparent' }}
         >
           {/* Filled Square Icon */}
-          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 6h12v12H6z"/>
           </svg>
         </Button>
@@ -144,11 +146,11 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
-      </div>
-      
-      {/* Time display - compact and discrete */}
-      <div className="text-xs text-slate-300 font-mono text-center leading-tight">
-        {formatTime(currentTime)} / {formatTime(duration || 0)}
+        
+        {/* Time display inline */}
+        <div className="text-xs text-slate-300 font-mono text-center leading-none whitespace-nowrap">
+          {formatTime(currentTime)} / {formatTime(duration || 0)}
+        </div>
       </div>
     </div>
   );

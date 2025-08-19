@@ -8,14 +8,15 @@ import { Card as ShadCard, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { extractPlainText, truncateToLines } from "@/lib/utils/description-helpers";
-import { Music } from "lucide-react";
+import { Music, List } from "lucide-react";
 
 interface CardProps {
   card: any;
   onCardClick?: (cardId: string) => void;
+  allCards?: any[]; // Para contar playlists que incluem este card
 }
 
-export function Card({ card, onCardClick }: CardProps) {
+export function Card({ card, onCardClick, allCards = [] }: CardProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: card.id,
     data: { type: "Card", card },
@@ -42,6 +43,14 @@ export function Card({ card, onCardClick }: CardProps) {
     }
   };
 
+  // Contar quantas playlists incluem este card (apenas se não for playlist)
+  const playlistCount = !card.isPlaylist 
+    ? allCards.filter(c => 
+        c.isPlaylist && 
+        c.playlistItems?.some((item: any) => item.cardId === card.id)
+      ).length 
+    : 0;
+
   return (
     <>
       <ShadCard
@@ -67,12 +76,12 @@ export function Card({ card, onCardClick }: CardProps) {
         
         {/* Card content - clickable for opening sheet */}
         <div onClick={handleCardClick} className="cursor-pointer">
-          <CardHeader>
+          <CardHeader className="p-2 pb-1">
             {/* Title with optional avatar */}
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-start gap-3 mb-2">
               {/* Avatar cover */}
               {card.coverUrl && (
-                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
                   <img 
                     src={card.coverUrl} 
                     alt={card.title}
@@ -80,7 +89,16 @@ export function Card({ card, onCardClick }: CardProps) {
                   />
                 </div>
               )}
-              <CardTitle className="text-sm flex-1">{card.title}</CardTitle>
+              <div className="flex-1 space-y-2">
+                <CardTitle className="text-sm leading-tight">{card.title}</CardTitle>
+                
+                {/* Rating */}
+                {card.rating > 0 && (
+                  <div className="flex justify-start">
+                    <StarRating rating={card.rating || 0} readonly size="sm" />
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Playlist preview - show first 3 playlist items if in playlist mode */}
@@ -116,14 +134,14 @@ export function Card({ card, onCardClick }: CardProps) {
 
             {/* Tags preview - show by default if tags exist and not explicitly disabled, but not for playlist cards */}
             {!card.isPlaylist && card.showTagsInPreview !== false && card.tags && card.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
+              <div className="flex flex-wrap gap-1 mb-2 px-0">
                 {card.tags.slice(0, 3).map((tag: string, index: number) => (
-                  <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
+                  <Badge key={index} variant="secondary" className="text-xs px-2 py-1 rounded-sm bg-gray-100 text-gray-600 border-0">
                     {tag}
                   </Badge>
                 ))}
                 {card.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs px-2 py-1">
+                  <Badge variant="outline" className="text-xs px-2 py-1 rounded-sm">
                     +{card.tags.length - 3}
                   </Badge>
                 )}
@@ -132,15 +150,16 @@ export function Card({ card, onCardClick }: CardProps) {
 
             {/* Description preview - only show if enabled, without border/background */}
             {card.showDescriptionInPreview && card.description && (
-              <div className="text-xs text-slate-600 mb-3 leading-relaxed whitespace-pre-wrap">
+              <div className="text-xs text-gray-600 mb-2 leading-relaxed whitespace-pre-wrap px-4">
                 {truncateToLines(extractPlainText(card.description), 6)}
               </div>
             )}
             
-            {/* Rating - readonly in preview */}
-            {card.rating > 0 && (
-              <div className="flex justify-start">
-                <StarRating rating={card.rating || 0} readonly size="sm" />
+            {/* Playlists count - show if card is included in playlists */}
+            {!card.isPlaylist && playlistCount > 0 && (
+              <div className="flex items-center gap-1 pt-1">
+                <List className="h-3 w-3 text-slate-500" />
+                <span className="text-xs text-slate-500">Playlists ({playlistCount})</span>
               </div>
             )}
           </CardHeader>
