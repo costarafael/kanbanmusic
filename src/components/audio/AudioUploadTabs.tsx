@@ -7,7 +7,7 @@ import { useAudioUpload } from "./hooks/useAudioUpload";
 import { useCoverExtraction } from "./hooks/useCoverExtraction";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Music, List } from "lucide-react";
+import { Music, List, History } from "lucide-react";
 
 interface PlaylistItem {
   cardId: string;
@@ -28,6 +28,7 @@ interface AudioUploadTabsProps {
   onPlaylistChange?: (isPlaylist: boolean) => void;
   onPlaylistItemsChange?: (items: PlaylistItem[]) => void;
   boardId?: string;
+  playlistHistory?: PlaylistItem[];
 }
 
 export function AudioUploadTabs({ 
@@ -39,7 +40,8 @@ export function AudioUploadTabs({
   playlistItems = [],
   onPlaylistChange,
   onPlaylistItemsChange,
-  boardId
+  boardId,
+  playlistHistory = []
 }: AudioUploadTabsProps) {
   const audioUpload = useAudioUpload();
   const coverExtraction = useCoverExtraction();
@@ -116,6 +118,11 @@ export function AudioUploadTabs({
           <Label htmlFor="playlist-mode" className="text-xs text-gray-500 flex items-center gap-1">
             <List className="h-3 w-3" />
             Playlist
+            {!localIsPlaylist && playlistHistory.length > 0 && (
+              <span title={`${playlistHistory.length} músicas em histórico`}>
+                <History className="h-3 w-3 text-amber-500" />
+              </span>
+            )}
           </Label>
         </div>
       </div>

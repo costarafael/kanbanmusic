@@ -18,6 +18,10 @@ const cardSchema = new Schema({
     cardId: { type: String, required: true }, // ID do card referenciado
     order: { type: Number, required: true }, // Ordem na playlist
   }], // Array de items da playlist
+  playlistHistory: [{ 
+    cardId: { type: String, required: true }, // ID do card referenciado
+    order: { type: Number, required: true }, // Ordem na playlist
+  }], // Array de items da playlist em histórico (quando desabilitado)
   order: { type: Number, required: true },
   columnId: { type: String, required: true },
   status: { type: String, enum: ['active', 'archived'], default: 'active' },
