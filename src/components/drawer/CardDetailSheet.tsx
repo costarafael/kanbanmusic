@@ -58,6 +58,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   const [playlistItems, setPlaylistItems] = useState(card?.playlistItems || []);
   const [playlistHistory, setPlaylistHistory] = useState(card?.playlistHistory || []);
   const [showPlaylistConfirmDialog, setShowPlaylistConfirmDialog] = useState(false);
+  const [playlistItemsToSave, setPlaylistItemsToSave] = useState<any[]>([]);
   const queryClient = useQueryClient();
 
   // Fetch board tags for autocomplete
@@ -193,6 +194,8 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
     // Se está desabilitando o modo playlist e há items na playlist
     if (!newIsPlaylist && playlistItems.length > 0) {
       console.log('🚨 Showing confirmation dialog');
+      console.log('💾 Saving current playlist items for modal:', playlistItems);
+      setPlaylistItemsToSave(playlistItems); // Salvar items no momento do modal
       setShowPlaylistConfirmDialog(true);
       return;
     }
@@ -221,18 +224,19 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   };
 
   const handleKeepPlaylistHistory = () => {
-    console.log('💾 Keeping playlist history:', playlistItems);
-    // Mover playlist atual para histórico
-    setPlaylistHistory(playlistItems);
+    console.log('💾 Keeping playlist history:', playlistItemsToSave);
+    // Mover playlist atual para histórico usando os items salvos
+    setPlaylistHistory(playlistItemsToSave);
     setPlaylistItems([]);
     setIsPlaylist(false);
     updateCardMutation({ 
       id: card.id, 
       isPlaylist: false,
       playlistItems: [],
-      playlistHistory: playlistItems
+      playlistHistory: playlistItemsToSave
     });
     setShowPlaylistConfirmDialog(false);
+    setPlaylistItemsToSave([]); // Limpar items salvos
   };
 
   const handleDeletePlaylist = () => {
@@ -247,6 +251,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
       playlistHistory: []
     });
     setShowPlaylistConfirmDialog(false);
+    setPlaylistItemsToSave([]); // Limpar items salvos
   };
 
   const handleArchiveCard = () => {
@@ -429,7 +434,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
         <AlertDialogHeader>
           <AlertDialogTitle>Desabilitar modo Playlist</AlertDialogTitle>
           <AlertDialogDescription>
-            Você tem {playlistItems.length} músicas na sua playlist. O que deseja fazer?
+            Você tem {playlistItemsToSave.length} músicas na sua playlist. O que deseja fazer?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
