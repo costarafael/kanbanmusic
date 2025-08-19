@@ -281,7 +281,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
                   playlistItems={playlistItems}
                   onPlaylistItemsChange={handlePlaylistItemsChange}
                 />
-                {card.isPlaylist && playlistItems.length > 0 ? (
+                {card.isPlaylist ? (
                   <div className="mt-4">
                     <PlaylistPlayer 
                       playlistItems={playlistItems} 
@@ -291,7 +291,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
                       onPlaylistChange={handlePlaylistItemsChange}
                     />
                   </div>
-                ) : audioUrl && !card.isPlaylist ? (
+                ) : audioUrl ? (
                   <div className="mt-4">
                     <MiniPlayer audioUrl={audioUrl} cardId={card.id} />
                   </div>

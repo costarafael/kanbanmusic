@@ -304,6 +304,88 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
       {hasAudio && (
         <audio ref={audioRef} src={currentTrack.audioUrl} preload="metadata" />
       )}
+
+      {/* Empty State - show when no tracks */}
+      {playlistItems.length === 0 && onPlaylistChange && (
+        <div className="space-y-4">
+          <div className="text-center py-4">
+            <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center mx-auto mb-3">
+              <List className="h-6 w-6 text-slate-300" />
+            </div>
+            <div>
+              <p className="text-slate-200 font-medium mb-1">Empty Playlist</p>
+              <p className="text-slate-400 text-sm">Add your first track to get started</p>
+            </div>
+          </div>
+          
+          {/* Search interface for empty playlist */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSearch(!showSearch)}
+                className="bg-slate-600 border-slate-500 text-slate-100 hover:bg-slate-500"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {showSearch ? 'Hide Search' : 'Add First Track'}
+              </Button>
+            </div>
+            
+            {showSearch && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search cards to add..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-slate-600 border-slate-500 text-slate-100 placeholder-slate-400 text-sm"
+                  />
+                </div>
+
+                {/* Search results */}
+                {searchResults.length > 0 && (
+                  <div className="max-h-24 overflow-y-auto bg-slate-600 rounded border border-slate-500">
+                    {searchResults.map((result) => (
+                      <div
+                        key={result.id}
+                        className="flex items-center gap-2 p-2 hover:bg-slate-500 cursor-pointer text-xs"
+                        onClick={() => addToPlaylist(result)}
+                      >
+                        {/* Cover image */}
+                        {result.coverUrl ? (
+                          <img
+                            src={result.coverUrl}
+                            alt={result.title}
+                            className="w-8 h-8 rounded object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-slate-500 rounded flex items-center justify-center flex-shrink-0">
+                            <Music className="h-4 w-4 text-slate-300" />
+                          </div>
+                        )}
+                        
+                        <span className="flex-1 truncate text-slate-100">{result.title}</span>
+                        <Plus className="h-3 w-3 text-slate-400" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {isSearching && (
+                  <div className="text-xs text-slate-400 text-center py-2">Searching...</div>
+                )}
+
+                {searchTerm && !isSearching && searchResults.length === 0 && (
+                  <div className="text-xs text-slate-400 text-center py-2">No cards found</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       
       {/* Audio Player Section - only show when tracks exist */}
       {playlistItems.length > 0 && (
@@ -407,8 +489,8 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
         </>
       )}
 
-      {/* Add to playlist button and search */}
-      {onPlaylistChange && (
+      {/* Add to playlist button and search - show always when editable */}
+      {onPlaylistChange && playlistItems.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-200">Playlist Management</span>
