@@ -137,7 +137,7 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
     <ShadCard 
       ref={setNodeRef}
       style={style}
-      className={`w-80 relative transition-all duration-200 bg-neutral-50 ${
+      className={`w-80 h-full flex flex-col relative transition-all duration-200 bg-neutral-50 ${
         isDragging ? "opacity-50 scale-105" : "opacity-100"
       } ${
         isOver && active?.data.current?.type === "Card" 
@@ -174,7 +174,8 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
         </div>
       )}
 
-      <CardHeader className={column.coverUrl ? "pt-3" : ""}>
+      {/* Fixed Header */}
+      <CardHeader className={`flex-shrink-0 ${column.coverUrl ? "pt-3" : ""}`}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 flex-1">
             <div 
@@ -292,7 +293,9 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
           </div>
         </div>
       </CardHeader>
-      <CardContent className="min-h-[200px] p-4">
+      
+      {/* Scrollable Content */}
+      <CardContent className="flex-1 p-4 overflow-y-auto column-scroll min-h-0">
         <SortableContext 
           items={cards.map((c) => c.id)}
           strategy={verticalListSortingStrategy}

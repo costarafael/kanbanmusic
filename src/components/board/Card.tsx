@@ -171,6 +171,11 @@ export function Card({ card, onCardClick, allCards = [] }: CardProps) {
             <CompactPlayer audioUrl={card.audioUrl} cardId={card.id} />
           </div>
         )}
+        
+        {/* Extra padding for cards without audio to prevent content from being too close to border */}
+        {!card.audioUrl && !card.isPlaylist && (
+          <div className="pb-4" />
+        )}
       </ShadCard>
     </>
   );
