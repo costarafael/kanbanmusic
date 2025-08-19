@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Music, Play, Pause, Square, SkipForward, SkipBack } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Music, Play, Pause, Square, SkipForward, SkipBack, Search, Plus, X, GripVertical } from "lucide-react";
 import { useAudioStore } from "@/lib/store/useAudioStore";
 
 interface PlaylistItem {
@@ -14,18 +15,31 @@ interface PlaylistItem {
   coverUrl?: string;
 }
 
+interface SearchResult {
+  id: string;
+  title: string;
+  audioUrl?: string;
+  coverUrl?: string;
+}
+
 interface PlaylistPlayerProps {
   playlistItems: PlaylistItem[];
   cardId: string; // For the audio store
   onCardClick?: (cardId: string) => void; // To open referenced cards
   boardId?: string; // For generating card URLs
+  onPlaylistChange?: (items: PlaylistItem[]) => void; // For updating playlist
 }
 
-export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId }: PlaylistPlayerProps) {
+export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, onPlaylistChange }: PlaylistPlayerProps) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const { playing, actions } = useAudioStore();
@@ -155,6 +169,120 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId }: 
     return `${baseUrl}/b/${boardId}?card=${cardId}`;
   };
 
+  // Search for cards with audio
+  const searchCards = async (term: string) => {
+    if (!term.trim() || !boardId) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/boards/${boardId}/cards/search?q=${encodeURIComponent(term)}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Filter only cards with audio and not already in playlist
+        const filteredResults = data.cards
+          .filter((card: any) => 
+            card.audioUrl && 
+            !playlistItems.some(item => item.cardId === card.id)
+          )
+          .map((card: any) => ({
+            id: card.id,
+            title: card.title,
+            audioUrl: card.audioUrl,
+            coverUrl: card.coverUrl,
+          }));
+        setSearchResults(filteredResults);
+      }
+    } catch (error) {
+      console.error('Failed to search cards:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchCards(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, boardId, playlistItems]);
+
+  const addToPlaylist = (card: SearchResult) => {
+    if (!onPlaylistChange) return;
+
+    const newItem: PlaylistItem = {
+      cardId: card.id,
+      order: playlistItems.length,
+      title: card.title,
+      audioUrl: card.audioUrl,
+      coverUrl: card.coverUrl,
+    };
+    
+    onPlaylistChange([...playlistItems, newItem]);
+    setSearchTerm("");
+    setSearchResults([]);
+    setShowSearch(false);
+  };
+
+  const removeFromPlaylist = (index: number) => {
+    if (!onPlaylistChange) return;
+
+    const newItems = playlistItems
+      .filter((_, i) => i !== index)
+      .map((item, i) => ({ ...item, order: i }));
+    onPlaylistChange(newItems);
+
+    // Adjust current track index if needed
+    if (index === currentTrackIndex) {
+      setCurrentTrackIndex(0);
+      setIsPlaying(false);
+    } else if (index < currentTrackIndex) {
+      setCurrentTrackIndex(currentTrackIndex - 1);
+    }
+  };
+
+  const moveItem = (fromIndex: number, toIndex: number) => {
+    if (!onPlaylistChange) return;
+
+    const newItems = [...playlistItems];
+    const [movedItem] = newItems.splice(fromIndex, 1);
+    newItems.splice(toIndex, 0, movedItem);
+    
+    // Update order
+    const reorderedItems = newItems.map((item, i) => ({ ...item, order: i }));
+    onPlaylistChange(reorderedItems);
+
+    // Update current track index
+    if (fromIndex === currentTrackIndex) {
+      setCurrentTrackIndex(toIndex);
+    } else if (fromIndex < currentTrackIndex && toIndex >= currentTrackIndex) {
+      setCurrentTrackIndex(currentTrackIndex - 1);
+    } else if (fromIndex > currentTrackIndex && toIndex <= currentTrackIndex) {
+      setCurrentTrackIndex(currentTrackIndex + 1);
+    }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    
+    moveItem(draggedIndex, index);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
   if (playlistItems.length === 0) {
     return null;
   }
@@ -266,43 +394,134 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId }: 
         </div>
       )}
 
-      {/* Track list */}
-      {playlistItems.length > 1 && (
-        <div className="max-h-32 overflow-y-auto space-y-1">
-          {playlistItems.map((track, index) => (
-            <div
-              key={`${track.cardId}-${index}`}
-              className={`flex items-center gap-2 p-2 rounded text-xs ${
-                index === currentTrackIndex
-                  ? 'bg-slate-600 text-slate-100'
-                  : 'text-slate-300 hover:bg-slate-600/50'
-              }`}
+      {/* Add to playlist button and search */}
+      {onPlaylistChange && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-200">Playlist Management</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSearch(!showSearch)}
+              className="h-6 px-2 text-slate-300 hover:text-slate-100"
             >
-              <span 
-                className="w-4 text-center cursor-pointer"
-                onClick={() => setCurrentTrackIndex(index)}
-              >
-                {index + 1}
-              </span>
-              <a
-                href={generateCardUrl(track.cardId)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 truncate cursor-pointer hover:text-slate-100 transition-colors hover:underline"
-                title="Click to open card in new tab"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent playlist item selection
-                }}
-              >
-                {track.title || `Track ${index + 1}`}
-              </a>
-              {!track.audioUrl && (
-                <Badge variant="outline" className="text-xs border-slate-500 text-slate-400">
-                  No audio
-                </Badge>
+              <Plus className="h-3 w-3 mr-1" />
+              Add Track
+            </Button>
+          </div>
+
+          {/* Search interface */}
+          {showSearch && (
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Search cards to add..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-slate-600 border-slate-500 text-slate-100 placeholder-slate-400 text-sm"
+                />
+              </div>
+
+              {/* Search results */}
+              {searchResults.length > 0 && (
+                <div className="max-h-24 overflow-y-auto bg-slate-600 rounded border border-slate-500">
+                  {searchResults.map((result) => (
+                    <div
+                      key={result.id}
+                      className="flex items-center justify-between p-2 hover:bg-slate-500 cursor-pointer text-xs"
+                      onClick={() => addToPlaylist(result)}
+                    >
+                      <span className="flex-1 truncate text-slate-100">{result.title}</span>
+                      <Plus className="h-3 w-3 text-slate-400" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {isSearching && (
+                <div className="text-xs text-slate-400 text-center py-2">Searching...</div>
+              )}
+
+              {searchTerm && !isSearching && searchResults.length === 0 && (
+                <div className="text-xs text-slate-400 text-center py-2">No cards found</div>
               )}
             </div>
-          ))}
+          )}
+        </div>
+      )}
+
+      {/* Track list with drag & drop */}
+      {playlistItems.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-200">
+              Tracks ({playlistItems.length})
+            </span>
+          </div>
+          <div className="max-h-32 overflow-y-auto space-y-1">
+            {playlistItems.map((track, index) => (
+              <div
+                key={`${track.cardId}-${index}`}
+                draggable={!!onPlaylistChange}
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-2 p-2 rounded text-xs transition-colors ${
+                  index === currentTrackIndex
+                    ? 'bg-slate-600 text-slate-100'
+                    : 'text-slate-300 hover:bg-slate-600/50'
+                } ${draggedIndex === index ? 'opacity-50' : ''}`}
+              >
+                {/* Drag handle */}
+                {onPlaylistChange && (
+                  <GripVertical className="h-3 w-3 text-slate-500 cursor-grab" />
+                )}
+                
+                {/* Track number */}
+                <span 
+                  className="w-4 text-center cursor-pointer"
+                  onClick={() => setCurrentTrackIndex(index)}
+                >
+                  {index + 1}
+                </span>
+                
+                {/* Track title */}
+                <a
+                  href={generateCardUrl(track.cardId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 truncate cursor-pointer hover:text-slate-100 transition-colors hover:underline"
+                  title="Click to open card in new tab"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent playlist item selection
+                  }}
+                >
+                  {track.title || `Track ${index + 1}`}
+                </a>
+                
+                {/* Audio status badge */}
+                {!track.audioUrl && (
+                  <Badge variant="outline" className="text-xs border-slate-500 text-slate-400">
+                    No audio
+                  </Badge>
+                )}
+                
+                {/* Remove button */}
+                {onPlaylistChange && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFromPlaylist(index)}
+                    className="h-4 w-4 p-0 text-slate-400 hover:text-red-400"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
