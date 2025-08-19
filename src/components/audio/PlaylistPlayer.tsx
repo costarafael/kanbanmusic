@@ -283,10 +283,6 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
     setDraggedIndex(null);
   };
 
-  if (playlistItems.length === 0) {
-    return null;
-  }
-
   return (
     <div className={`p-3 rounded-lg space-y-3 relative overflow-hidden ${
       isThisPlayerPlaying && isPlaying 
@@ -297,8 +293,11 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
         <audio ref={audioRef} src={currentTrack.audioUrl} preload="metadata" />
       )}
       
-      {/* Current track info */}
-      <div className="flex items-center gap-3">
+      {/* Audio Player Section - only show when tracks exist */}
+      {playlistItems.length > 0 && (
+        <>
+          {/* Current track info */}
+          <div className="flex items-center gap-3">
         {currentTrack?.coverUrl ? (
           <img
             src={currentTrack.coverUrl}
@@ -393,6 +392,8 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
           </div>
         </div>
       )}
+        </>
+      )}
 
       {/* Add to playlist button and search */}
       {onPlaylistChange && (
@@ -430,9 +431,22 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
                   {searchResults.map((result) => (
                     <div
                       key={result.id}
-                      className="flex items-center justify-between p-2 hover:bg-slate-500 cursor-pointer text-xs"
+                      className="flex items-center gap-2 p-2 hover:bg-slate-500 cursor-pointer text-xs"
                       onClick={() => addToPlaylist(result)}
                     >
+                      {/* Cover image */}
+                      {result.coverUrl ? (
+                        <img
+                          src={result.coverUrl}
+                          alt={result.title}
+                          className="w-8 h-8 rounded object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-slate-500 rounded flex items-center justify-center flex-shrink-0">
+                          <Music className="h-4 w-4 text-slate-300" />
+                        </div>
+                      )}
+                      
                       <span className="flex-1 truncate text-slate-100">{result.title}</span>
                       <Plus className="h-3 w-3 text-slate-400" />
                     </div>
@@ -486,6 +500,19 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
                 >
                   {index + 1}
                 </span>
+                
+                {/* Cover image */}
+                {track.coverUrl ? (
+                  <img
+                    src={track.coverUrl}
+                    alt={track.title || `Track ${index + 1}`}
+                    className="w-8 h-8 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-slate-600 rounded flex items-center justify-center flex-shrink-0">
+                    <Music className="h-4 w-4 text-slate-400" />
+                  </div>
+                )}
                 
                 {/* Track title */}
                 <a

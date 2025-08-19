@@ -122,11 +122,7 @@ export function AudioUploadTabs({
 
       {/* Content based on mode */}
       {localIsPlaylist ? (
-        <div className="text-center py-8 text-slate-500">
-          <List className="h-8 w-8 mx-auto mb-2" />
-          <p className="text-sm">Playlist mode enabled</p>
-          <p className="text-xs mt-1">Manage your playlist using the player below</p>
-        </div>
+        <div className="h-4"></div>
       ) : (
         <AudioUploadForm
           currentUrl={currentUrl}
