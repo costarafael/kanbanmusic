@@ -37,11 +37,13 @@ export async function GET(
         $match: {
           'column.boardId': boardId,
           status: 'active',
+          isPlaylist: { $ne: true }, // Exclude playlist cards from search results
           title: { $regex: query, $options: 'i' }
         }
       },
       {
         $project: {
+          _id: 0,
           id: 1,
           title: 1,
           audioUrl: 1,
