@@ -17,9 +17,10 @@ interface PlaylistItem {
 interface PlaylistPlayerProps {
   playlistItems: PlaylistItem[];
   cardId: string; // For the audio store
+  onCardClick?: (cardId: string) => void; // To open referenced cards
 }
 
-export function PlaylistPlayer({ playlistItems, cardId }: PlaylistPlayerProps) {
+export function PlaylistPlayer({ playlistItems, cardId, onCardClick }: PlaylistPlayerProps) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -134,6 +135,19 @@ export function PlaylistPlayer({ playlistItems, cardId }: PlaylistPlayerProps) {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !hasAudio) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newTime = (clickX / rect.width) * (duration || 100);
+    
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
   if (playlistItems.length === 0) {
     return null;
   }
@@ -226,21 +240,50 @@ export function PlaylistPlayer({ playlistItems, cardId }: PlaylistPlayerProps) {
         </Button>
       </div>
 
+      {/* Timeline - only show if current track has audio and duration > 0 */}
+      {hasAudio && duration > 0 && (
+        <div className="space-y-2">
+          <div 
+            className="w-full bg-slate-600 rounded-full h-2 cursor-pointer"
+            onClick={handleProgressClick}
+          >
+            <div
+              className="bg-slate-100 h-full rounded-full transition-all duration-100"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-slate-300 font-mono">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+      )}
+
       {/* Track list */}
       {playlistItems.length > 1 && (
         <div className="max-h-32 overflow-y-auto space-y-1">
           {playlistItems.map((track, index) => (
             <div
               key={`${track.cardId}-${index}`}
-              onClick={() => setCurrentTrackIndex(index)}
-              className={`flex items-center gap-2 p-2 rounded cursor-pointer text-xs ${
+              className={`flex items-center gap-2 p-2 rounded text-xs ${
                 index === currentTrackIndex
                   ? 'bg-slate-600 text-slate-100'
                   : 'text-slate-300 hover:bg-slate-600/50'
               }`}
             >
-              <span className="w-4 text-center">{index + 1}</span>
-              <span className="flex-1 truncate">{track.title || `Track ${index + 1}`}</span>
+              <span 
+                className="w-4 text-center cursor-pointer"
+                onClick={() => setCurrentTrackIndex(index)}
+              >
+                {index + 1}
+              </span>
+              <span 
+                className="flex-1 truncate cursor-pointer hover:text-slate-100 transition-colors"
+                onClick={() => onCardClick?.(track.cardId)}
+                title="Click to open card details"
+              >
+                {track.title || `Track ${index + 1}`}
+              </span>
               {!track.audioUrl && (
                 <Badge variant="outline" className="text-xs border-slate-500 text-slate-400">
                   No audio

@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { Archive, MoreHorizontal } from "lucide-react";
 import { TagsInput } from "@/components/ui/tags-input";
+import { ShareCardButton } from "@/components/ui/share-card-button";
 import { useQuery } from "@tanstack/react-query";
 
 interface CardDetailSheetProps {
@@ -28,6 +29,7 @@ interface CardDetailSheetProps {
   isOpen: boolean;
   onClose: () => void;
   boardId?: string;
+  onCardClick?: (cardId: string) => void;
 }
 
 async function updateCard(cardData: any) {
@@ -42,7 +44,7 @@ async function updateCard(cardData: any) {
   return res.json();
 }
 
-export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSheetProps) {
+export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }: CardDetailSheetProps) {
   const [title, setTitle] = useState(card?.title || "");
   const [audioUrl, setAudioUrl] = useState(card?.audioUrl || "");
   const [coverUrl, setCoverUrl] = useState(card?.coverUrl || "");
@@ -213,22 +215,25 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSh
                   placeholder="Card title..."
                 />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={handleArchiveCard}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Archive className="h-4 w-4 mr-2" />
-                    Archive Card
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-1">
+                <ShareCardButton cardId={card.id} boardId={boardId || getBoardIdFromCard()} />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={handleArchiveCard}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archive Card
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -273,7 +278,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSh
                 />
                 {isPlaylist && playlistItems.length > 0 ? (
                   <div className="mt-4">
-                    <PlaylistPlayer playlistItems={playlistItems} cardId={card.id} />
+                    <PlaylistPlayer playlistItems={playlistItems} cardId={card.id} onCardClick={onCardClick} />
                   </div>
                 ) : audioUrl && !isPlaylist ? (
                   <div className="mt-4">

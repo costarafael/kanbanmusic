@@ -125,6 +125,7 @@ export function Board({ boardId }: BoardProps) {
             isOpen={!!boardState.selectedCardId} 
             onClose={boardState.handleCloseCard}
             boardId={boardId}
+            onCardClick={boardState.handleOpenCard}
           />
         ) : null;
       })()}

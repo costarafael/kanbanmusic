@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface CardUpdateData {
   id: string;
@@ -85,6 +86,9 @@ async function updateBoard(boardData: { id: string; title?: string }) {
 }
 
 export function useBoardState(boardId: string) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   // UI State
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -201,13 +205,33 @@ export function useBoardState(boardId: string) {
     },
   });
 
+  // Handle card URL params
+  useEffect(() => {
+    const cardParam = searchParams.get('card');
+    if (cardParam && data?.cards) {
+      // Verify the card exists in this board
+      const cardExists = data.cards.some((card: any) => card.id === cardParam);
+      if (cardExists) {
+        setSelectedCardId(cardParam);
+      }
+    }
+  }, [searchParams, data?.cards]);
+
   // Handlers
   const handleOpenCard = (cardId: string) => {
     setSelectedCardId(cardId);
+    // Update URL to include card parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('card', cardId);
+    router.replace(url.toString());
   };
 
   const handleCloseCard = () => {
     setSelectedCardId(null);
+    // Remove card parameter from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('card');
+    router.replace(url.toString());
   };
 
   const handleBoardTitleSave = () => {
