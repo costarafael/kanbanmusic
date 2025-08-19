@@ -18,9 +18,10 @@ interface PlaylistPlayerProps {
   playlistItems: PlaylistItem[];
   cardId: string; // For the audio store
   onCardClick?: (cardId: string) => void; // To open referenced cards
+  boardId?: string; // For generating card URLs
 }
 
-export function PlaylistPlayer({ playlistItems, cardId, onCardClick }: PlaylistPlayerProps) {
+export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId }: PlaylistPlayerProps) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -146,6 +147,12 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick }: PlaylistP
     
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
+  };
+
+  const generateCardUrl = (cardId: string) => {
+    if (!boardId) return '#';
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/b/${boardId}?card=${cardId}`;
   };
 
   if (playlistItems.length === 0) {
@@ -277,13 +284,18 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick }: PlaylistP
               >
                 {index + 1}
               </span>
-              <span 
-                className="flex-1 truncate cursor-pointer hover:text-slate-100 transition-colors"
-                onClick={() => onCardClick?.(track.cardId)}
-                title="Click to open card details"
+              <a
+                href={generateCardUrl(track.cardId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 truncate cursor-pointer hover:text-slate-100 transition-colors hover:underline"
+                title="Click to open card in new tab"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent playlist item selection
+                }}
               >
                 {track.title || `Track ${index + 1}`}
-              </span>
+              </a>
               {!track.audioUrl && (
                 <Badge variant="outline" className="text-xs border-slate-500 text-slate-400">
                   No audio
