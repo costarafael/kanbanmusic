@@ -50,12 +50,12 @@ export function BoardToolbar({
               setIsEditingBoardTitle(false);
             }
           }}
-          className="text-2xl font-bold border-none p-0 focus-visible:ring-0 bg-transparent text-slate-800"
+          className="text-lg font-bold border-none p-0 focus-visible:ring-0 bg-transparent text-slate-800"
           autoFocus
         />
       ) : (
         <h1 
-          className="text-2xl font-bold text-slate-800 cursor-pointer hover:text-slate-600 transition-colors"
+          className="text-lg font-bold text-slate-800 cursor-pointer hover:text-slate-600 transition-colors"
           onClick={() => setIsEditingBoardTitle(true)}
         >
           {boardTitle}

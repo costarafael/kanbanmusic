@@ -45,7 +45,7 @@ export function BoardGrid({
       items={columns.map((col: any) => col.id)} 
       strategy={horizontalListSortingStrategy}
     >
-      <div className="flex gap-5 overflow-x-auto pb-4 h-[calc(100vh-200px)]">
+      <div className="flex gap-5 overflow-x-auto pb-4 h-full">
         {/* Existing Columns */}
         {columns.map((column: any) => (
           <Column

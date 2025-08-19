@@ -57,36 +57,40 @@ export function Board({ boardId }: BoardProps) {
       onDragStart={dragAndDrop.handleDragStart}
       onDragEnd={dragAndDrop.handleDragEnd}
     >
-      <div className="min-h-screen bg-slate-200 p-4">
-        {/* Board Header and Actions */}
-        <BoardToolbar
-          boardTitle={boardState.data.board?.title}
-          isEditingBoardTitle={boardState.isEditingBoardTitle}
-          editBoardTitle={boardState.editBoardTitle}
-          setEditBoardTitle={boardState.setEditBoardTitle}
-          setIsEditingBoardTitle={boardState.setIsEditingBoardTitle}
-          handleBoardTitleSave={boardState.handleBoardTitleSave}
-          newColumnTitle={boardState.newColumnTitle}
-          setNewColumnTitle={boardState.setNewColumnTitle}
-          isCreateColumnDialogOpen={boardState.isCreateColumnDialogOpen}
-          setIsCreateColumnDialogOpen={boardState.setIsCreateColumnDialogOpen}
-          createColumnMutation={boardState.createColumnMutation}
-          boardId={boardId}
-        />
+      <div className="h-screen bg-slate-200 p-4 flex flex-col">
+        {/* Board Header and Actions - Fixed height */}
+        <div className="flex-shrink-0">
+          <BoardToolbar
+            boardTitle={boardState.data.board?.title}
+            isEditingBoardTitle={boardState.isEditingBoardTitle}
+            editBoardTitle={boardState.editBoardTitle}
+            setEditBoardTitle={boardState.setEditBoardTitle}
+            setIsEditingBoardTitle={boardState.setIsEditingBoardTitle}
+            handleBoardTitleSave={boardState.handleBoardTitleSave}
+            newColumnTitle={boardState.newColumnTitle}
+            setNewColumnTitle={boardState.setNewColumnTitle}
+            isCreateColumnDialogOpen={boardState.isCreateColumnDialogOpen}
+            setIsCreateColumnDialogOpen={boardState.setIsCreateColumnDialogOpen}
+            createColumnMutation={boardState.createColumnMutation}
+            boardId={boardId}
+          />
+        </div>
         
-        {/* Board Grid */}
-        <BoardGrid
-          columns={boardState.columns}
-          cards={boardState.cards}
-          onCardCreated={boardState.handleOpenCard}
-          onCardClick={boardState.handleOpenCard}
-          newColumnTitle={boardState.newColumnTitle}
-          setNewColumnTitle={boardState.setNewColumnTitle}
-          isCreateColumnDialogOpen={boardState.isCreateColumnDialogOpen}
-          setIsCreateColumnDialogOpen={boardState.setIsCreateColumnDialogOpen}
-          createColumnMutation={boardState.createColumnMutation}
-          boardId={boardId}
-        />
+        {/* Board Grid - Takes remaining height */}
+        <div className="flex-1 min-h-0">
+          <BoardGrid
+            columns={boardState.columns}
+            cards={boardState.cards}
+            onCardCreated={boardState.handleOpenCard}
+            onCardClick={boardState.handleOpenCard}
+            newColumnTitle={boardState.newColumnTitle}
+            setNewColumnTitle={boardState.setNewColumnTitle}
+            isCreateColumnDialogOpen={boardState.isCreateColumnDialogOpen}
+            setIsCreateColumnDialogOpen={boardState.setIsCreateColumnDialogOpen}
+            createColumnMutation={boardState.createColumnMutation}
+            boardId={boardId}
+          />
+        </div>
       </div>
       
       {/* Drag Overlay */}
