@@ -22,11 +22,9 @@ export async function GET(
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
 
-    // Populate playlist items and/or history with card data
+    // Populate playlist items with card data if they exist
     const cardObj = card.toObject();
-    let needsPopulation = false;
 
-    // Populate playlist items if they exist
     if (card.playlistItems && card.playlistItems.length > 0) {
       const populatedItems = [];
       
@@ -44,31 +42,6 @@ export async function GET(
       }
       
       cardObj.playlistItems = populatedItems;
-      needsPopulation = true;
-    }
-
-    // Populate playlist history if it exists
-    if (card.playlistHistory && card.playlistHistory.length > 0) {
-      const populatedHistory = [];
-      
-      for (const item of card.playlistHistory) {
-        const referencedCard = await Card.findOne({ id: item.cardId, status: 'active' });
-        if (referencedCard) {
-          populatedHistory.push({
-            cardId: item.cardId,
-            order: item.order,
-            title: referencedCard.title,
-            audioUrl: referencedCard.audioUrl,
-            coverUrl: referencedCard.coverUrl,
-          });
-        }
-      }
-      
-      cardObj.playlistHistory = populatedHistory;
-      needsPopulation = true;
-    }
-
-    if (needsPopulation) {
       return NextResponse.json(cardObj);
     }
 

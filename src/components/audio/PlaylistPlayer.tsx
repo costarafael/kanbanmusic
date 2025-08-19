@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Music, Play, Pause, Square, SkipForward, SkipBack, Search, Plus, X, GripVertical, ExternalLink } from "lucide-react";
+import { Music, Play, Pause, Square, SkipForward, SkipBack, Search, Plus, X, GripVertical, ExternalLink, List } from "lucide-react";
 import { useAudioStore } from "@/lib/store/useAudioStore";
 
 interface PlaylistItem {

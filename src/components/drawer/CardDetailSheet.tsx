@@ -281,7 +281,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
                   playlistItems={playlistItems}
                   onPlaylistItemsChange={handlePlaylistItemsChange}
                 />
-                {card.isPlaylist ? (
+                {card.isPlaylist === true ? (
                   <div className="mt-4">
                     <PlaylistPlayer 
                       playlistItems={playlistItems} 
