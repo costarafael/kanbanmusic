@@ -85,6 +85,13 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   // Sync state when card changes
   useEffect(() => {
     if (card) {
+      console.log('🔄 Card data received:', { 
+        id: card.id, 
+        isPlaylist: card.isPlaylist,
+        playlistItems: card.playlistItems?.length || 0,
+        playlistHistory: card.playlistHistory?.length || 0,
+        playlistHistoryData: card.playlistHistory
+      });
       setTitle(card.title || "");
       setAudioUrl(card.audioUrl || "");
       setCoverUrl(card.coverUrl || "");
@@ -181,14 +188,18 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   };
 
   const handlePlaylistChange = (newIsPlaylist: boolean) => {
+    console.log('🔄 handlePlaylistChange called:', { newIsPlaylist, playlistItems: playlistItems.length, playlistHistory: playlistHistory.length });
+    
     // Se está desabilitando o modo playlist e há items na playlist
     if (!newIsPlaylist && playlistItems.length > 0) {
+      console.log('🚨 Showing confirmation dialog');
       setShowPlaylistConfirmDialog(true);
       return;
     }
     
     // Se está habilitando e há histórico, restaurar do histórico
     if (newIsPlaylist && playlistHistory.length > 0) {
+      console.log('📂 Restoring from history:', playlistHistory);
       setPlaylistItems(playlistHistory);
       setPlaylistHistory([]);
       updateCardMutation({ 
@@ -198,6 +209,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
         playlistHistory: []
       });
     } else {
+      console.log('💾 Simple toggle:', { newIsPlaylist });
       setIsPlaylist(newIsPlaylist);
       updateCardMutation({ id: card.id, isPlaylist: newIsPlaylist });
     }
@@ -209,6 +221,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   };
 
   const handleKeepPlaylistHistory = () => {
+    console.log('💾 Keeping playlist history:', playlistItems);
     // Mover playlist atual para histórico
     setPlaylistHistory(playlistItems);
     setPlaylistItems([]);
