@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card as ShadCard, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MoreHorizontal, Archive, Edit2, GripVertical, Image } from "lucide-react";
+import { MoreHorizontal, Archive, Edit2, GripVertical, Image, Upload } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { InlineCoverEditor } from "@/components/cover/InlineCoverEditor";
+import { BulkImportDialog } from "@/components/audio/BulkImportDialog";
 
 interface ColumnProps {
   column: any;
@@ -56,6 +57,7 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
   const [editTitle, setEditTitle] = useState(column.title);
   const [isEditingCover, setIsEditingCover] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const queryClient = useQueryClient();
   
   const { active } = useDndContext();
@@ -151,6 +153,14 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
           onClose={handleCloseCoverDialog}
         />
       )}
+      
+      {/* Bulk Import Dialog */}
+      <BulkImportDialog
+        isOpen={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        columnId={column.id}
+        columnTitle={column.title}
+      />
       
       {/* Cover image */}
       {column.coverUrl && (
@@ -267,6 +277,10 @@ export function Column({ column, cards, onCardCreated, onCardClick }: ColumnProp
                 <DropdownMenuItem onClick={() => setIsEditingCover(true)}>
                   <Image className="mr-2 h-4 w-4" />
                   Edit cover
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsBulkImportOpen(true)}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Bulk import
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleArchiveColumn}>
                   <Archive className="mr-2 h-4 w-4" />
