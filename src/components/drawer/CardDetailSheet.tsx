@@ -86,13 +86,6 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   // Sync state when card changes
   useEffect(() => {
     if (card) {
-      console.log('🔄 Card data received:', { 
-        id: card.id, 
-        isPlaylist: card.isPlaylist,
-        playlistItems: card.playlistItems?.length || 0,
-        playlistHistory: card.playlistHistory?.length || 0,
-        playlistHistoryData: card.playlistHistory
-      });
       setTitle(card.title || "");
       setAudioUrl(card.audioUrl || "");
       setCoverUrl(card.coverUrl || "");
@@ -189,12 +182,8 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   };
 
   const handlePlaylistChange = (newIsPlaylist: boolean) => {
-    console.log('🔄 handlePlaylistChange called:', { newIsPlaylist, playlistItems: playlistItems.length, playlistHistory: playlistHistory.length });
-    
     // Se está desabilitando o modo playlist e há items na playlist
     if (!newIsPlaylist && playlistItems.length > 0) {
-      console.log('🚨 Showing confirmation dialog');
-      console.log('💾 Saving current playlist items for modal:', playlistItems);
       setPlaylistItemsToSave(playlistItems); // Salvar items no momento do modal
       setShowPlaylistConfirmDialog(true);
       return;
@@ -202,7 +191,6 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
     
     // Se está habilitando e há histórico, restaurar do histórico
     if (newIsPlaylist && playlistHistory.length > 0) {
-      console.log('📂 Restoring from history:', playlistHistory);
       setPlaylistItems(playlistHistory);
       setPlaylistHistory([]);
       updateCardMutation({ 
@@ -212,7 +200,6 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
         playlistHistory: []
       });
     } else {
-      console.log('💾 Simple toggle:', { newIsPlaylist });
       setIsPlaylist(newIsPlaylist);
       updateCardMutation({ id: card.id, isPlaylist: newIsPlaylist });
     }
@@ -224,7 +211,6 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   };
 
   const handleKeepPlaylistHistory = () => {
-    console.log('💾 Keeping playlist history:', playlistItemsToSave);
     // Mover playlist atual para histórico usando os items salvos
     setPlaylistHistory(playlistItemsToSave);
     setPlaylistItems([]);
@@ -255,8 +241,19 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   };
 
   const handleArchiveCard = () => {
-    updateCardMutation({ id: card.id, status: "archived" });
-    onClose();
+    updateCardMutation(
+      { id: card.id, status: "archived" },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+        onError: (error) => {
+          console.error('Error archiving card:', error);
+          // Ainda fechar o modal mesmo em caso de erro
+          onClose();
+        }
+      }
+    );
   };
 
   // Safety check - if card is undefined, don't render anything

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Music, Play, Pause, Square, SkipForward, SkipBack, Search, Plus, X, GripVertical } from "lucide-react";
+import { Music, Play, Pause, Square, SkipForward, SkipBack, Search, Plus, X, GripVertical, ExternalLink } from "lucide-react";
 import { useAudioStore } from "@/lib/store/useAudioStore";
 
 interface PlaylistItem {
@@ -109,6 +109,18 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
       setIsPlaying(true);
       actions.play(cardId, playerId);
     }
+  };
+
+  const handleTrackClick = (index: number) => {
+    const track = playlistItems[index];
+    if (!track.audioUrl) return; // Não tocar se não tem áudio
+    
+    setCurrentTrackIndex(index);
+    
+    // Stop any other playing audio and start this track
+    actions.stop();
+    setIsPlaying(true);
+    actions.play(cardId, playerId);
   };
 
   const handleStop = () => {
@@ -514,19 +526,32 @@ export function PlaylistPlayer({ playlistItems, cardId, onCardClick, boardId, on
                   </div>
                 )}
                 
-                {/* Track title */}
-                <a
-                  href={generateCardUrl(track.cardId)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 truncate cursor-pointer hover:text-slate-100 transition-colors hover:underline"
-                  title="Click to open card in new tab"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent playlist item selection
-                  }}
+                {/* Track title - clickable to play */}
+                <span
+                  className={`flex-1 truncate cursor-pointer transition-colors ${
+                    track.audioUrl 
+                      ? 'hover:text-slate-100 hover:underline' 
+                      : 'text-slate-500 cursor-not-allowed'
+                  }`}
+                  title={track.audioUrl ? "Click to play this track" : "No audio available"}
+                  onClick={() => handleTrackClick(index)}
                 >
                   {track.title || `Track ${index + 1}`}
-                </a>
+                </span>
+
+                {/* Open card button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(generateCardUrl(track.cardId), '_blank');
+                  }}
+                  className="h-6 w-6 p-0 text-slate-400 hover:text-slate-100"
+                  title="Open card in new tab"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
                 
                 {/* Audio status badge */}
                 {!track.audioUrl && (

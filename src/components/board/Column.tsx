@@ -7,10 +7,10 @@ import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card as ShadCard, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MoreHorizontal, Archive, Edit2, GripVertical, Image, Upload } from "lucide-react";
+import { MoreHorizontal, Archive, Edit2, GripVertical, Image, Upload, Search, X } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -59,6 +59,8 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
   const [isEditingCover, setIsEditingCover] = useState(false);
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const queryClient = useQueryClient();
   
   const { active } = useDndContext();
@@ -131,6 +133,40 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
   const setNodeRef = (node: HTMLElement | null) => {
     setDroppableRef(node);
     setSortableRef(node);
+  };
+
+  // Filter cards based on search term
+  const filteredCards = useMemo(() => {
+    if (!searchTerm.trim()) return cards;
+    
+    const term = searchTerm.toLowerCase();
+    return cards.filter(card => {
+      // Search in title (priority)
+      if (card.title?.toLowerCase().includes(term)) return true;
+      
+      // Search in tags
+      if (card.tags?.some((tag: string) => tag.toLowerCase().includes(term))) return true;
+      
+      // Search in description content (if it's a rich text object)
+      if (card.description && typeof card.description === 'object') {
+        const descriptionText = JSON.stringify(card.description).toLowerCase();
+        if (descriptionText.includes(term)) return true;
+      }
+      
+      // Search in music AI notes
+      if (card.music_ai_notes?.toLowerCase().includes(term)) return true;
+      
+      return false;
+    });
+  }, [cards, searchTerm]);
+
+  const handleSearchToggle = () => {
+    if (isSearchActive) {
+      setSearchTerm("");
+      setIsSearchActive(false);
+    } else {
+      setIsSearchActive(true);
+    }
   };
 
   return (
@@ -265,6 +301,23 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
               </DialogContent>
             </Dialog>
             
+            {/* Search Button */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`h-8 w-8 p-0 transition-colors ${
+                isSearchActive ? 'text-blue-600 bg-blue-50' : ''
+              }`}
+              onClick={handleSearchToggle}
+              title="Search in this column"
+            >
+              {isSearchActive ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -292,6 +345,24 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
             </DropdownMenu>
           </div>
         </div>
+        
+        {/* Search Input */}
+        {isSearchActive && (
+          <div className="mt-3 px-4 pb-3">
+            <Input
+              placeholder="Search cards..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="text-sm"
+              autoFocus
+            />
+            {searchTerm && (
+              <div className="text-xs text-slate-500 mt-1">
+                {filteredCards.length} of {cards.length} cards
+              </div>
+            )}
+          </div>
+        )}
       </CardHeader>
       
       {/* Scrollable Content */}
@@ -300,9 +371,9 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
           items={cards.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
-          {cards.length > 0 ? (
+          {filteredCards.length > 0 ? (
             <>
-              {cards.map((card) => <Card key={card.id} card={card} onCardClick={onCardClick} allCards={allCards} />)}
+              {filteredCards.map((card) => <Card key={card.id} card={card} onCardClick={onCardClick} allCards={allCards} />)}
               
               {/* Add Card Button at the end */}
               <Button
@@ -320,15 +391,23 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
           ) : (
             <div 
               className="flex flex-col items-center justify-center h-32 text-center p-4 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors duration-200"
-              onClick={() => setIsAddCardDialogOpen(true)}
+              onClick={() => searchTerm ? handleSearchToggle() : setIsAddCardDialogOpen(true)}
             >
               <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+                {searchTerm ? (
+                  <Search className="w-6 h-6 text-slate-400" />
+                ) : (
+                  <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                )}
               </div>
-              <p className="text-slate-500 text-sm font-medium">No cards yet</p>
-              <p className="text-slate-400 text-xs mt-1">Click here to add your first card</p>
+              <p className="text-slate-500 text-sm font-medium">
+                {searchTerm ? 'No cards found' : 'No cards yet'}
+              </p>
+              <p className="text-slate-400 text-xs mt-1">
+                {searchTerm ? 'Click to clear search' : 'Click here to add your first card'}
+              </p>
             </div>
           )}
         </SortableContext>
