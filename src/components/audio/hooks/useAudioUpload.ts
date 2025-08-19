@@ -1,7 +1,5 @@
 import { useState } from 'react';
 
-const FILE_SIZE_LIMIT_VERCEL = 4.5 * 1024 * 1024; // 4.5MB limit for Vercel Functions
-
 export function useAudioUpload() {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -21,72 +19,47 @@ export function useAudioUpload() {
       let uploadedUrl: string;
       let musicAiNotes: string | undefined;
       
-      if (file.size <= FILE_SIZE_LIMIT_VERCEL) {
-        // Use server upload for smaller files (includes AI analysis)
-        console.log('Using server upload for file under 4.5MB...');
+      // Always use client upload to avoid server limits
+      console.log('Using client upload for all files...');
+      
+      try {
+        const { upload } = await import('@vercel/blob/client');
         
-        const formData = new FormData();
-        formData.append('audio', file);
-        
-        const response = await fetch('/api/upload/audio', {
-          method: 'POST',
-          body: formData
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload/audio-presigned',
         });
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error('Server upload failed:', response.status, response.statusText, errorData);
-          throw new Error(errorData.error || `Upload failed: ${response.status} ${response.statusText}`);
-        }
+        uploadedUrl = blob.url;
+        console.log('Client upload successful:', blob.url);
         
-        const result = await response.json();
-        uploadedUrl = result.url;
-        musicAiNotes = result.music_ai_notes;
-        
-        console.log('Server upload successful:', result);
-      } else {
-        // Use client upload for larger files (auth protection now disabled)
-        console.log('Using client upload for file over 4.5MB...');
-        
+        // Optional: Try AI analysis (may timeout for large files, but worth trying)
+        console.log('Attempting AI analysis...');
         try {
-          const { upload } = await import('@vercel/blob/client');
+          const formData = new FormData();
+          formData.append('audio', file);
           
-          const blob = await upload(file.name, file, {
-            access: 'public',
-            handleUploadUrl: '/api/upload/audio-presigned',
+          const aiResponse = await fetch('/api/ai/clap-music', {
+            method: 'POST',
+            body: formData
           });
           
-          uploadedUrl = blob.url;
-          console.log('Client upload successful:', blob.url);
-          
-          // Optional: Try AI analysis for large files (may timeout, but worth trying)
-          console.log('Attempting AI analysis for large file...');
-          try {
-            const formData = new FormData();
-            formData.append('audio', file);
-            
-            const aiResponse = await fetch('/api/ai/clap-music', {
-              method: 'POST',
-              body: formData
-            });
-            
-            if (aiResponse.ok) {
-              const aiResult = await aiResponse.json();
-              if (aiResult.success && aiResult.musicNotes) {
-                musicAiNotes = aiResult.musicNotes;
-                console.log('AI analysis successful for large file');
-              }
-            } else {
-              console.log('AI analysis failed for large file, but upload succeeded');
+          if (aiResponse.ok) {
+            const aiResult = await aiResponse.json();
+            if (aiResult.success && aiResult.musicNotes) {
+              musicAiNotes = aiResult.musicNotes;
+              console.log('AI analysis successful');
             }
-          } catch (aiError) {
-            console.log('AI analysis timed out for large file, but upload succeeded:', aiError);
+          } else {
+            console.log('AI analysis failed, but upload succeeded');
           }
-          
-        } catch (clientUploadError) {
-          console.error('Client upload failed:', clientUploadError);
-          throw new Error(`Client upload failed: ${clientUploadError instanceof Error ? clientUploadError.message : 'Unknown error'}`);
+        } catch (aiError) {
+          console.log('AI analysis timed out, but upload succeeded:', aiError);
         }
+        
+      } catch (clientUploadError) {
+        console.error('Client upload failed:', clientUploadError);
+        throw new Error(`Client upload failed: ${clientUploadError instanceof Error ? clientUploadError.message : 'Unknown error'}`);
       }
       
       onAudioUrlChange(uploadedUrl, musicAiNotes);

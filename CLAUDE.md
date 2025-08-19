@@ -11,13 +11,13 @@
 - **Descrições Rich Text** - Editor baseado em textarea para descrições
 
 ### ✅ Uploads e Mídia - REFORMULADO
-- **Audio Upload Híbrido** - Sistema otimizado para diferentes tamanhos de arquivo
-  - **Arquivos ≤ 4.5MB**: Server upload com análise AI completa
-  - **Arquivos > 4.5MB**: Client upload direto para Vercel Blob com AI opcional
+- **Audio Upload Unificado** - Sistema simplificado para todos os tamanhos de arquivo
+  - **Todos os arquivos**: Client upload direto para Vercel Blob (evita erro 413)
   - Upload via Vercel Blob com `addRandomSuffix` automático
   - Validação de URL para links diretos de áudio
   - Extração automática de cover art de arquivos MP3
   - Limite de 100MB para arquivos
+  - AI análise opcional (pode dar timeout mas upload sempre funciona)
   - Player de áudio integrado
 - **Cover Images** - Upload de imagens de capa para cards e colunas
   - Suporte para JPEG, PNG, WebP, GIF
@@ -86,26 +86,19 @@
 
 ## 🎵 Sistema de Upload de Áudio - DETALHADO
 
-### Arquitetura Híbrida
-O sistema foi redesenhado para otimizar performance e contornar limitações da Vercel:
+### Arquitetura Unificada
+O sistema foi simplificado para usar sempre client upload, evitando limitações do servidor:
 
-#### Server Upload (≤ 4.5MB)
-```
-File → FormData → /api/upload/audio → AI Analysis → Vercel Blob → Complete
-```
-- ✅ Análise AI completa garantida
-- ✅ Processamento no servidor 
-- ✅ Logs detalhados
-
-#### Client Upload (> 4.5MB) 
+#### Client Upload (Todos os arquivos)
 ```
 File → Vercel Blob Client → /api/upload/audio-presigned → Upload Success
                                     ↓
                              AI Analysis (opcional) → AI Notes ou Skip
 ```
-- ✅ Contorna limite de 4.5MB das Vercel Functions
-- ✅ Upload sempre bem-sucedido
+- ✅ Sem limite de 4.5MB das Vercel Functions (evita erro 413)
+- ✅ Upload sempre bem-sucedido para arquivos até 100MB
 - ✅ AI opcional para evitar timeouts
+- ✅ Processo consistente para todos os tamanhos
 
 ### Configurações de Segurança
 - **Deployment Protection**: Desativado no projeto Vercel
@@ -193,12 +186,12 @@ src/
 
 ## 🚀 Funcionalidades Recentemente Implementadas
 
-### ✅ Upload de Áudio Reformulado (2025-08-18)
-- Sistema híbrido server/client upload baseado no tamanho do arquivo
-- Resolução de problemas com Vercel Functions (limite 4.5MB)
-- Integração com Vercel Blob storage
-- Presigned URLs para arquivos grandes
-- Análise AI opcional para arquivos grandes
+### ✅ Upload de Áudio Reformulado (2025-08-19)
+- Sistema unificado client upload para todos os tamanhos de arquivo
+- Eliminação do erro 413 (Payload Too Large) ao remover server upload
+- Integração com Vercel Blob storage via presigned URLs
+- Análise AI opcional para todos os arquivos (pode dar timeout)
+- Upload sempre bem-sucedido até 100MB, independente do resultado da AI
 - **Interface simplificada**: Removidas tabs, apenas botão "Choose Audio File"
 
 ### ✅ Sistema de Tags Completo
@@ -329,11 +322,13 @@ vercel env ls
 
 ---
 
-**Última atualização**: 2025-08-18  
-**Versão**: 3.0.0 - Major Refactoring & Architecture Improvement  
+**Última atualização**: 2025-08-19  
+**Versão**: 3.1.0 - Unified Upload System & UI Polish  
 **Status**: 
-- ✅ Sistema de upload híbrido estável e funcionando
+- ✅ Sistema de upload unificado (client-only) - elimina erro 413
 - ✅ Cover extraction corrigido 
+- ✅ Audio player design aprimorado (sem bordas, tema escuro consistente)
+- ✅ UI/UX melhoradas (hover interactions, timelines sempre visíveis)
 - ✅ Código duplicado removido (API /lp-music-caps, AudioUpload.tsx obsoleto)
 - ✅ Documentação consolidada (removidos 4 arquivos MD redundantes)
 - ✅ **REFATORAÇÃO COMPLETA**: Board.tsx (560→120 linhas) e AudioUploadTabs.tsx (457→67 linhas)
