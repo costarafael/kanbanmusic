@@ -118,7 +118,8 @@ export function Board({ boardId }: BoardProps) {
           <CardDetailSheet 
             card={selectedCard} 
             isOpen={!!boardState.selectedCardId} 
-            onClose={boardState.handleCloseCard} 
+            onClose={boardState.handleCloseCard}
+            boardId={boardId}
           />
         ) : null;
       })()}

@@ -26,6 +26,7 @@ interface CardDetailSheetProps {
   card: any;
   isOpen: boolean;
   onClose: () => void;
+  boardId?: string;
 }
 
 async function updateCard(cardData: any) {
@@ -40,7 +41,7 @@ async function updateCard(cardData: any) {
   return res.json();
 }
 
-export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps) {
+export function CardDetailSheet({ card, isOpen, onClose, boardId }: CardDetailSheetProps) {
   const [title, setTitle] = useState(card?.title || "");
   const [audioUrl, setAudioUrl] = useState(card?.audioUrl || "");
   const [coverUrl, setCoverUrl] = useState(card?.coverUrl || "");
@@ -53,17 +54,15 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
 
   // Fetch board tags for autocomplete
   const { data: boardTags } = useQuery({
-    queryKey: ["board-tags", card?.columnId],
+    queryKey: ["board-tags", boardId || getBoardIdFromCard()],
     queryFn: async () => {
-      if (!card?.columnId) return { tags: [] };
-      // We need to get the board ID from the card, but we don't have it directly
-      // For now, we'll extract it from the context or make an additional API call
-      // Let's assume we can get it from the current URL or pass it as prop
-      const response = await fetch(`/api/boards/${getBoardIdFromCard()}/tags`);
+      const currentBoardId = boardId || getBoardIdFromCard();
+      if (!currentBoardId) return { tags: [] };
+      const response = await fetch(`/api/boards/${currentBoardId}/tags`);
       if (!response.ok) return { tags: [] };
       return response.json();
     },
-    enabled: !!card?.columnId,
+    enabled: !!(boardId || card?.columnId),
   });
 
   // Helper function to get board ID - this might need adjustment based on your routing
@@ -92,7 +91,11 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
   const { mutate: updateCardMutation } = useMutation({
     mutationFn: updateCard,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["board"] });
+      if (boardId) {
+        queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["board"] });
+      }
     },
   });
 
@@ -135,9 +138,9 @@ export function CardDetailSheet({ card, isOpen, onClose }: CardDetailSheetProps)
     
     // Update board's known tags
     try {
-      const boardId = getBoardIdFromCard();
-      if (boardId) {
-        await fetch(`/api/boards/${boardId}/tags`, {
+      const currentBoardId = boardId || getBoardIdFromCard();
+      if (currentBoardId) {
+        await fetch(`/api/boards/${currentBoardId}/tags`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tags: newTags }),

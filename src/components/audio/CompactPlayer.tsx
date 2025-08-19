@@ -11,11 +11,11 @@ interface CompactPlayerProps {
 
 export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { playingCardId, actions } = useAudioStore();
+  const { playing, actions } = useAudioStore();
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const isPlaying = playingCardId === cardId;
+  const isPlaying = playing?.cardId === cardId && playing?.playerId === 'compact';
 
   useEffect(() => {
     if (isPlaying) {
@@ -64,7 +64,7 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
     if (isPlaying) {
       actions.pause();
     } else {
-      actions.play(cardId);
+      actions.play(cardId, 'compact');
     }
   };
 
@@ -95,35 +95,25 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
   };
 
   return (
-    <div className="bg-slate-700 p-3 rounded-lg space-y-3">
+    <div className="bg-slate-700 p-2 rounded-lg">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
-      {/* Progress bar - Always visible at top */}
-      <div 
-        className="w-full bg-slate-600 rounded-full h-2 cursor-pointer"
-        onClick={handleProgressClick}
-      >
-        <div
-          className="bg-slate-100 h-full rounded-full transition-all duration-100"
-          style={{ width: `${progressPercentage}%` }}
-        />
-      </div>
-      
-      <div className="flex items-center gap-3">
+      {/* Progress bar with controls inline */}
+      <div className="flex items-center gap-2 mb-1">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePlay}
-          className="h-8 w-8 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600"
+          className="h-6 w-6 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600 flex-shrink-0"
         >
           {isPlaying ? (
             // Filled Pause Icon
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
             </svg>
           ) : (
             // Filled Play Icon
-            <svg className="h-4 w-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="h-3 w-3 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
           )}
@@ -133,19 +123,29 @@ export function CompactPlayer({ audioUrl, cardId }: CompactPlayerProps) {
           variant="ghost"
           size="sm"
           onClick={handleStop}
-          className="h-8 w-8 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600"
+          className="h-6 w-6 p-0 flex items-center justify-center text-slate-100 hover:text-white hover:bg-slate-600 flex-shrink-0"
         >
           {/* Filled Square Icon */}
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 6h12v12H6z"/>
           </svg>
         </Button>
 
-        <div className="flex-1 text-xs text-slate-100 font-mono">
-          {formatTime(currentTime)} / {formatTime(duration || 0)}
+        <div 
+          className="flex-1 bg-slate-600 rounded-full h-2 cursor-pointer mx-1"
+          onClick={handleProgressClick}
+        >
+          <div
+            className="bg-slate-100 h-full rounded-full transition-all duration-100"
+            style={{ width: `${progressPercentage}%` }}
+          />
         </div>
       </div>
-
+      
+      {/* Time display - compact and discrete */}
+      <div className="text-xs text-slate-300 font-mono text-center leading-tight">
+        {formatTime(currentTime)} / {formatTime(duration || 0)}
+      </div>
     </div>
   );
 }

@@ -11,11 +11,11 @@ interface MiniPlayerProps {
 
 export function MiniPlayer({ audioUrl, cardId }: MiniPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { playingCardId, actions } = useAudioStore();
+  const { playing, actions } = useAudioStore();
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const isPlaying = playingCardId === cardId;
+  const isPlaying = playing?.cardId === cardId && playing?.playerId === 'detail';
 
   useEffect(() => {
     if (isPlaying) {
@@ -64,7 +64,7 @@ export function MiniPlayer({ audioUrl, cardId }: MiniPlayerProps) {
     if (isPlaying) {
       actions.pause();
     } else {
-      actions.play(cardId);
+      actions.play(cardId, 'detail');
     }
   };
 

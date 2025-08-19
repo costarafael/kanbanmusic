@@ -1,19 +1,24 @@
 import { create } from 'zustand';
 
+interface PlayingAudio {
+  cardId: string;
+  playerId: string; // 'compact' or 'detail'
+}
+
 interface AudioState {
-  playingCardId: string | null;
+  playing: PlayingAudio | null;
   actions: {
-    play: (id: string) => void;
+    play: (cardId: string, playerId: string) => void;
     pause: () => void;
     stop: () => void;
   };
 }
 
 export const useAudioStore = create<AudioState>((set) => ({
-  playingCardId: null,
+  playing: null,
   actions: {
-    play: (id: string) => set({ playingCardId: id }),
-    pause: () => set({ playingCardId: null }),
-    stop: () => set({ playingCardId: null }),
+    play: (cardId: string, playerId: string) => set({ playing: { cardId, playerId } }),
+    pause: () => set({ playing: null }),
+    stop: () => set({ playing: null }),
   },
 }));
