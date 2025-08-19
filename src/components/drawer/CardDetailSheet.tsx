@@ -1,7 +1,6 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,11 +53,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
   const [showDescriptionInPreview, setShowDescriptionInPreview] = useState(card?.showDescriptionInPreview || false);
   const [showTagsInPreview, setShowTagsInPreview] = useState(card?.showTagsInPreview !== false); // Default true
   const [musicAiNotes, setMusicAiNotes] = useState(card?.music_ai_notes || "");
-  const [isPlaylist, setIsPlaylist] = useState(card?.isPlaylist || false);
   const [playlistItems, setPlaylistItems] = useState(card?.playlistItems || []);
-  const [playlistHistory, setPlaylistHistory] = useState(card?.playlistHistory || []);
-  const [showPlaylistConfirmDialog, setShowPlaylistConfirmDialog] = useState(false);
-  const [playlistItemsToSave, setPlaylistItemsToSave] = useState<any[]>([]);
   const queryClient = useQueryClient();
 
   // Fetch board tags for autocomplete
@@ -94,9 +89,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
       setShowDescriptionInPreview(card.showDescriptionInPreview || false);
       setShowTagsInPreview(card.showTagsInPreview !== false);
       setMusicAiNotes(card.music_ai_notes || "");
-      setIsPlaylist(card.isPlaylist || false);
       setPlaylistItems(card.playlistItems || []);
-      setPlaylistHistory(card.playlistHistory || []);
     }
   }, [card]);
 
@@ -181,64 +174,12 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
     }
   };
 
-  const handlePlaylistChange = (newIsPlaylist: boolean) => {
-    // Se está desabilitando o modo playlist e há items na playlist
-    if (!newIsPlaylist && playlistItems.length > 0) {
-      setPlaylistItemsToSave(playlistItems); // Salvar items no momento do modal
-      setShowPlaylistConfirmDialog(true);
-      return;
-    }
-    
-    // Se está habilitando e há histórico, restaurar do histórico
-    if (newIsPlaylist && playlistHistory.length > 0) {
-      setPlaylistItems(playlistHistory);
-      setPlaylistHistory([]);
-      updateCardMutation({ 
-        id: card.id, 
-        isPlaylist: newIsPlaylist,
-        playlistItems: playlistHistory,
-        playlistHistory: []
-      });
-    } else {
-      setIsPlaylist(newIsPlaylist);
-      updateCardMutation({ id: card.id, isPlaylist: newIsPlaylist });
-    }
-  };
 
   const handlePlaylistItemsChange = (items: any[]) => {
     setPlaylistItems(items);
     updateCardMutation({ id: card.id, playlistItems: items });
   };
 
-  const handleKeepPlaylistHistory = () => {
-    // Mover playlist atual para histórico usando os items salvos
-    setPlaylistHistory(playlistItemsToSave);
-    setPlaylistItems([]);
-    setIsPlaylist(false);
-    updateCardMutation({ 
-      id: card.id, 
-      isPlaylist: false,
-      playlistItems: [],
-      playlistHistory: playlistItemsToSave
-    });
-    setShowPlaylistConfirmDialog(false);
-    setPlaylistItemsToSave([]); // Limpar items salvos
-  };
-
-  const handleDeletePlaylist = () => {
-    // Limpar tudo
-    setPlaylistItems([]);
-    setPlaylistHistory([]);
-    setIsPlaylist(false);
-    updateCardMutation({ 
-      id: card.id, 
-      isPlaylist: false,
-      playlistItems: [],
-      playlistHistory: []
-    });
-    setShowPlaylistConfirmDialog(false);
-    setPlaylistItemsToSave([]); // Limpar items salvos
-  };
 
   const handleArchiveCard = () => {
     updateCardMutation(
@@ -336,14 +277,11 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
                   onAudioUrlChange={handleAudioUrlChange}
                   currentCoverUrl={coverUrl}
                   onCoverUrlChange={handleCoverUrlChange}
-                  isPlaylist={isPlaylist}
+                  isPlaylist={card.isPlaylist}
                   playlistItems={playlistItems}
-                  onPlaylistChange={handlePlaylistChange}
                   onPlaylistItemsChange={handlePlaylistItemsChange}
-                  boardId={boardId}
-                  playlistHistory={playlistHistory}
                 />
-                {isPlaylist && playlistItems.length > 0 ? (
+                {card.isPlaylist && playlistItems.length > 0 ? (
                   <div className="mt-4">
                     <PlaylistPlayer 
                       playlistItems={playlistItems} 
@@ -353,7 +291,7 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
                       onPlaylistChange={handlePlaylistItemsChange}
                     />
                   </div>
-                ) : audioUrl && !isPlaylist ? (
+                ) : audioUrl && !card.isPlaylist ? (
                   <div className="mt-4">
                     <MiniPlayer audioUrl={audioUrl} cardId={card.id} />
                   </div>
@@ -425,35 +363,6 @@ export function CardDetailSheet({ card, isOpen, onClose, boardId, onCardClick }:
       </DialogContent>
     </Dialog>
 
-    {/* Playlist Confirmation Dialog */}
-    <AlertDialog open={showPlaylistConfirmDialog} onOpenChange={setShowPlaylistConfirmDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Desabilitar modo Playlist</AlertDialogTitle>
-          <AlertDialogDescription>
-            Você tem {playlistItemsToSave.length} músicas na sua playlist. O que deseja fazer?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-          <AlertDialogCancel onClick={() => setShowPlaylistConfirmDialog(false)}>
-            Cancelar
-          </AlertDialogCancel>
-          <Button 
-            variant="outline" 
-            onClick={handleKeepPlaylistHistory}
-            className="w-full sm:w-auto"
-          >
-            Manter em histórico
-          </Button>
-          <AlertDialogAction 
-            onClick={handleDeletePlaylist}
-            className="bg-destructive hover:bg-destructive/90 w-full sm:w-auto"
-          >
-            Excluir playlist
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
     </>
   );
 }

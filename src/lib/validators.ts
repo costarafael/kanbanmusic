@@ -28,6 +28,7 @@ export const createCardSchema = z.object({
   audioUrl: z.string().refine(isValidAudioUrl, 'Invalid audio URL or path').optional().or(z.literal('')),
   coverUrl: z.string().refine(isValidUrl, 'Invalid cover URL or path').optional().or(z.literal('')),
   music_ai_notes: z.string().optional(),
+  isPlaylist: z.boolean().optional(),
 });
 
 export const updateCardSchema = z.object({
@@ -43,10 +44,6 @@ export const updateCardSchema = z.object({
   // Playlist fields
   isPlaylist: z.boolean().optional(),
   playlistItems: z.array(z.object({
-    cardId: z.string().min(1),
-    order: z.number().int().min(0),
-  })).optional(),
-  playlistHistory: z.array(z.object({
     cardId: z.string().min(1),
     order: z.number().int().min(0),
   })).optional(),

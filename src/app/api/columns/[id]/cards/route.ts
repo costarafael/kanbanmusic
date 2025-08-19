@@ -28,6 +28,7 @@ export async function POST(
       ...(validatedData.audioUrl && { audioUrl: validatedData.audioUrl }),
       ...(validatedData.coverUrl && { coverUrl: validatedData.coverUrl }),
       ...(validatedData.music_ai_notes && { music_ai_notes: validatedData.music_ai_notes }),
+      isPlaylist: validatedData.isPlaylist || false,
     });
     return NextResponse.json(newCard);
   } catch (error: any) {

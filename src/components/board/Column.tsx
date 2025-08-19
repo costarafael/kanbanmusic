@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card as ShadCard, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MoreHorizontal, Archive, Edit2, GripVertical, Image, Upload, Search, X } from "lucide-react";
+import { MoreHorizontal, Archive, Edit2, GripVertical, Image, Upload, Search, X, Music, List } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { InlineCoverEditor } from "@/components/cover/InlineCoverEditor";
 import { BulkImportDialog } from "@/components/audio/BulkImportDialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ColumnProps {
   column: any;
@@ -28,11 +30,11 @@ interface ColumnProps {
   allCards?: any[]; // Todos os cards do board para calcular playlists
 }
 
-async function createCard(newCard: { title: string; columnId: string }) {
+async function createCard(newCard: { title: string; columnId: string; isPlaylist?: boolean }) {
   const res = await fetch(`/api/columns/${newCard.columnId}/cards`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: newCard.title }),
+    body: JSON.stringify({ title: newCard.title, isPlaylist: newCard.isPlaylist }),
   });
   if (!res.ok) {
     throw new Error("Failed to create card");
@@ -54,6 +56,7 @@ async function updateColumn(columnData: { id: string; title?: string; status?: s
 
 export function Column({ column, cards, onCardCreated, onCardClick, allCards = [] }: ColumnProps) {
   const [newCardTitle, setNewCardTitle] = useState("");
+  const [newCardIsPlaylist, setNewCardIsPlaylist] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(column.title);
   const [isEditingCover, setIsEditingCover] = useState(false);
@@ -92,6 +95,7 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
     onSuccess: (newCard) => {
       queryClient.invalidateQueries({ queryKey: ["board", column.boardId] });
       setNewCardTitle("");
+      setNewCardIsPlaylist(false);
       setIsAddCardDialogOpen(false);
       // Auto-open the newly created card for editing with a small delay
       if (onCardCreated && newCard?.id) {
@@ -276,11 +280,36 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
                       onChange={(e) => setNewCardTitle(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && newCardTitle.trim()) {
-                          createCardMutation({ title: newCardTitle, columnId: column.id });
+                          createCardMutation({ title: newCardTitle, columnId: column.id, isPlaylist: newCardIsPlaylist });
                         }
                       }}
                       className="focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+                  
+                  {/* Playlist Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Music className="h-4 w-4 text-gray-500" />
+                      <Label htmlFor="card-type-toggle" className="text-sm font-medium">
+                        Card Type
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="card-type-toggle" className="text-xs text-gray-500">
+                        Audio
+                      </Label>
+                      <Switch
+                        id="card-type-toggle"
+                        checked={newCardIsPlaylist}
+                        onCheckedChange={setNewCardIsPlaylist}
+                      />
+                      <Label htmlFor="card-type-toggle" className="text-xs text-gray-500 flex items-center gap-1">
+                        <List className="h-3 w-3" />
+                        Playlist
+                      </Label>
+                    </div>
                   </div>
                   <div className="flex gap-2 justify-end">
                     <DialogTrigger asChild>
@@ -289,12 +318,12 @@ export function Column({ column, cards, onCardCreated, onCardClick, allCards = [
                       </Button>
                     </DialogTrigger>
                     <Button 
-                      onClick={() => createCardMutation({ title: newCardTitle, columnId: column.id })}
+                      onClick={() => createCardMutation({ title: newCardTitle, columnId: column.id, isPlaylist: newCardIsPlaylist })}
                       disabled={!newCardTitle.trim()}
                       size="sm"
                       className="bg-blue-600 hover:bg-blue-700"
                     >
-                      Create Card
+                      Create {newCardIsPlaylist ? 'Playlist' : 'Audio'} Card
                     </Button>
                   </div>
                 </div>

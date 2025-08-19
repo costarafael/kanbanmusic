@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { AudioUploadForm } from "./AudioUploadForm";
 import { CoverExtractionDialog } from "./CoverExtractionDialog";
 import { useAudioUpload } from "./hooks/useAudioUpload";
 import { useCoverExtraction } from "./hooks/useCoverExtraction";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Music, List, History } from "lucide-react";
+import { Music } from "lucide-react";
 
 interface PlaylistItem {
   cardId: string;
@@ -25,10 +22,7 @@ interface AudioUploadTabsProps {
   // Playlist props
   isPlaylist?: boolean;
   playlistItems?: PlaylistItem[];
-  onPlaylistChange?: (isPlaylist: boolean) => void;
   onPlaylistItemsChange?: (items: PlaylistItem[]) => void;
-  boardId?: string;
-  playlistHistory?: PlaylistItem[];
 }
 
 export function AudioUploadTabs({ 
@@ -38,14 +32,10 @@ export function AudioUploadTabs({
   onCoverUrlChange,
   isPlaylist = false,
   playlistItems = [],
-  onPlaylistChange,
-  onPlaylistItemsChange,
-  boardId,
-  playlistHistory = []
+  onPlaylistItemsChange
 }: AudioUploadTabsProps) {
   const audioUpload = useAudioUpload();
   const coverExtraction = useCoverExtraction();
-  const [localIsPlaylist, setLocalIsPlaylist] = useState(isPlaylist);
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -76,60 +66,18 @@ export function AudioUploadTabs({
     coverExtraction.handleKeepCurrentCover();
   };
 
-  const handlePlaylistToggle = (checked: boolean) => {
-    setLocalIsPlaylist(checked);
-    onPlaylistChange?.(checked);
-    
-    // Clear audio URL when switching to playlist mode
-    if (checked && currentUrl) {
-      handleRemoveAudio();
-    }
-    
-    // Clear playlist when switching to audio mode
-    if (!checked && playlistItems.length > 0) {
-      onPlaylistItemsChange?.([]);
-    }
-  };
 
-  const handlePlaylistItemsChange = (items: PlaylistItem[]) => {
-    onPlaylistItemsChange?.(items);
-  };
 
   return (
     <>
-      {/* Mode Toggle */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <Music className="h-4 w-4 text-gray-500" />
-          <Label htmlFor="playlist-mode" className="text-sm font-medium">
-            Audio Mode
-          </Label>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="playlist-mode" className="text-xs text-gray-500">
-            Single
-          </Label>
-          <Switch
-            id="playlist-mode"
-            checked={localIsPlaylist}
-            onCheckedChange={handlePlaylistToggle}
-          />
-          <Label htmlFor="playlist-mode" className="text-xs text-gray-500 flex items-center gap-1">
-            <List className="h-3 w-3" />
-            Playlist
-            {!localIsPlaylist && playlistHistory.length > 0 && (
-              <span title={`${playlistHistory.length} músicas em histórico`}>
-                <History className="h-3 w-3 text-amber-500" />
-              </span>
-            )}
-          </Label>
-        </div>
-      </div>
-
       {/* Content based on mode */}
-      {localIsPlaylist ? (
-        <div className="h-4"></div>
+      {isPlaylist ? (
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Music className="h-4 w-4" />
+            <span>This is a playlist card. Add songs using the playlist player below.</span>
+          </div>
+        </div>
       ) : (
         <AudioUploadForm
           currentUrl={currentUrl}
